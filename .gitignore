@@ -427,3 +427,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Reference-only game/loader DLLs
+/lib/*.dll
