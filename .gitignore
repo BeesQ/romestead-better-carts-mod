@@ -430,3 +430,6 @@ FodyWeavers.xsd
 
 # Reference-only game/loader DLLs
 /lib/*.dll
+
+# Seriously? Visual Studio keeps adding it, I am NOT even using it
+**/copilot-instructions.md
