@@ -1,65 +1,64 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <AssemblyName>BetterCarts</AssemblyName>
-    <RootNamespace>BetterCarts</RootNamespace>
-    <Version>1.0.0</Version>
-    <LangVersion>latest</LangVersion>
-    <Nullable>disable</Nullable>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <EnablePreviewFeatures>true</EnablePreviewFeatures>
-    <DebugType>none</DebugType>
-    <GenerateDependencyFile>false</GenerateDependencyFile>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <GamePath Condition="'$(GamePath)' == ''">$(ROMESTEAD_PATH)</GamePath>
-    <CopyToGamePlugins Condition="'$(CopyToGamePlugins)' == ''">true</CopyToGamePlugins>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<AssemblyName>BetterCarts</AssemblyName>
+		<RootNamespace>BetterCarts</RootNamespace>
+		<Version>1.0.0</Version>
+		<LangVersion>latest</LangVersion>
+		<Nullable>disable</Nullable>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<DebugType>none</DebugType>
+		<GenerateDependencyFile>false</GenerateDependencyFile>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<GamePath Condition="'$(GamePath)' == ''">$(ROMESTEAD_PATH)</GamePath>
+		<CopyToGamePlugins Condition="'$(CopyToGamePlugins)' == ''">true</CopyToGamePlugins>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Reference Include="BepInEx.Core">
-      <HintPath>$(GamePath)\BepInEx\core\BepInEx.Core.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="BepInEx.NET.Common">
-      <HintPath>$(GamePath)\BepInEx\core\BepInEx.NET.Common.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="0Harmony">
-      <HintPath>$(GamePath)\BepInEx\core\0Harmony.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Romestead">
-      <HintPath>$(GamePath)\Romestead.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="CandideServer">
-      <HintPath>$(GamePath)\CandideServer.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Shared">
-      <HintPath>$(GamePath)\Shared.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="CandideCreator.Shared">
-      <HintPath>$(GamePath)\CandideCreator.Shared.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="MonoGame.Framework">
-      <HintPath>$(GamePath)\MonoGame.Framework.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-  </ItemGroup>
+	<ItemGroup>
+		<Reference Include="BepInEx.Core">
+			<HintPath>$(GamePath)\BepInEx\core\BepInEx.Core.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="BepInEx.NET.Common">
+			<HintPath>$(GamePath)\BepInEx\core\BepInEx.NET.Common.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="0Harmony">
+			<HintPath>$(GamePath)\BepInEx\core\0Harmony.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Romestead">
+			<HintPath>$(GamePath)\Romestead.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="CandideServer">
+			<HintPath>$(GamePath)\CandideServer.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Shared">
+			<HintPath>$(GamePath)\Shared.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="CandideCreator.Shared">
+			<HintPath>$(GamePath)\CandideCreator.Shared.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="MonoGame.Framework">
+			<HintPath>$(GamePath)\MonoGame.Framework.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+	</ItemGroup>
 
-  <Target Name="CopyToGamePlugins" AfterTargets="Build" Condition="'$(CopyToGamePlugins)' == 'true'">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GamePath)\BepInEx\plugins" />
-  </Target>
+	<Target Name="CopyToGamePlugins" AfterTargets="Build" Condition="'$(CopyToGamePlugins)' == 'true'">
+		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GamePath)\BepInEx\plugins" />
+	</Target>
 
-  <Target Name="ValidateGamePath" BeforeTargets="ResolveAssemblyReferences">
-    <Error Condition="!Exists('$(GamePath)\Romestead.dll')"
-           Text="Game DLLs not found at GamePath '$(GamePath)'. Set the ROMESTEAD_PATH environment variable once (run: setx ROMESTEAD_PATH &quot;D:\Gry\Steam\steamapps\common\romestead&quot;) and restart your terminal/IDE, or pass -p:GamePath=... to dotnet build." />
-    <Error Condition="!Exists('$(GamePath)\BepInEx\core\BepInEx.Core.dll')"
-           Text="BepInEx core DLLs not found at '$(GamePath)\BepInEx\core'. Install the BepInEx loader (Nexus mods/1 or its GitHub release) and run the game once via Steam before building." />
-  </Target>
+	<Target Name="ValidateGamePath" BeforeTargets="ResolveAssemblyReferences">
+		<Error Condition="!Exists('$(GamePath)\Romestead.dll')"
+			   Text="Game DLLs not found at GamePath '$(GamePath)'. Set the ROMESTEAD_PATH environment variable once (run: setx ROMESTEAD_PATH &quot;D:\Gry\Steam\steamapps\common\romestead&quot;) and restart your terminal/IDE, or pass -p:GamePath=... to dotnet build." />
+		<Error Condition="!Exists('$(GamePath)\BepInEx\core\BepInEx.Core.dll')"
+			   Text="BepInEx core DLLs not found at '$(GamePath)\BepInEx\core'. Install the BepInEx loader (Nexus mods/1 or its GitHub release) and run the game once via Steam before building." />
+	</Target>
 
 </Project>
