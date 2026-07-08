@@ -12,8 +12,8 @@ All settings (master toggle, per-feature toggles, both ranges) are in-game under
 
 ## Requirements
 
-- [BepInExPack_Romestead (Mod Loader)](https://thunderstore.io/c/romestead/p/Romestead_Modding/BepInExPack_Romestead/)
-- [ModSettingsMenu](https://thunderstore.io/c/romestead/p/Ice_Box_Studio_Romestead/ModSettingsMenu/)
+- [BepInExPack_Romestead (Mod Loader)](https://thunderstore.io/c/romestead/p/Romestead_Modding/BepInExPack_Romestead)
+- [ModSettingsMenu (Settings Menu)](https://thunderstore.io/c/romestead/p/Ice_Box_Studio_Romestead/ModSettingsMenu)
 
 Both are installed automatically as dependencies by your mod manager
 
@@ -21,10 +21,20 @@ Both are installed automatically as dependencies by your mod manager
 
 Server-authoritative: only the host needs the mod, joining players do not need anything installed
 
+## Install
+
+Automatic (recommended): click Install with Mod Manager on this page, works with Thunderstore Mod Manager, r2modman, or Gale
+
+Manual: download the zip and extract its contents into Romestead/BepInEx/plugins/
+
 ## Notes
 
 - Safe to add or remove at any time, the mod stores nothing in your save
 - Deposit takes only matching resources from Cart cargo, Output pads are untouched
+
+## Bug Reports and Feedback
+
+Please submit through GitHub Issues on the source repo (link below)
 
 ## Links
 
