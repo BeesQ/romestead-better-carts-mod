@@ -9,8 +9,10 @@ A [BepInEx 6 CoreCLR](https://www.nexusmods.com/romestead/mods/1) mod for **Rome
 ## Features
 
 - **Chain Overflow** - when a full Cart picks up an item, it is passed to the next Cart in the chain with a free slot. Nothing is left behind until every chained Cart is full
+- **Bucket Priority** - prefer grabbing an empty Bucket when unloading a Cart
 - **Collect Range** - Carts automatically pick up loose items within a configurable radius (0-10 tiles, default 2). 0 = vanilla
-- **Deposit Range** - Carts deposit matching cargo into Material Storages within range (0-10 tiles, default 2), no more pixel-perfect parking on the storage pad. 0 = vanilla
+- **Deposit Range** - Carts deposit matching cargo into Material Storages within range (0-10 tiles, default 2). 0 = vanilla
+- **Connect Range** - free Carts are pulled toward a Cart the player is pulling once in range (0-10 tiles, default 2). 0 = vanilla
 
 All behavior is server-authoritative, so in multiplayer only the host needs the mod
 
@@ -18,12 +20,12 @@ All behavior is server-authoritative, so in multiplayer only the host needs the 
 
 Settings live under **Settings -> Mod Settings** in-game (via [Mod Settings Menu](https://www.nexusmods.com/romestead/mods/8)), or in `BepInEx/config/com.beesq.romestead.bettercarts.cfg`
 
-| Section | Key | Default | Meaning |
-| --- | --- | --- | --- |
-| General | Enabled | true | Master on/off for the whole mod |
-| Chain Overflow | Enabled | true | Pass overflow to the next chained Cart |
-| Collect Range | Enabled / Range | true / 2 | Ranged pickup of loose items (0-10 tiles, 0 = vanilla) |
-| Deposit Range | Enabled / Range | true / 2 | Ranged deposit into Material Storages (0-10 tiles, 0 = vanilla) |
+| Section        | Key             | Default  | Meaning                                                         |
+| -------------- | --------------- | -------- | --------------------------------------------------------------- |
+| General        | Enabled         | true     | Master on/off for the whole mod                                 |
+| Chain Overflow | Enabled         | true     | Pass overflow to the next chained Cart                          |
+| Collect Range  | Enabled / Range | true / 2 | Ranged pickup of loose items (0-10 tiles, 0 = vanilla)          |
+| Deposit Range  | Enabled / Range | true / 2 | Ranged deposit into Material Storages (0-10 tiles, 0 = vanilla) |
 
 ## Install (players)
 

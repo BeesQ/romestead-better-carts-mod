@@ -11,7 +11,7 @@ namespace BetterCarts;
 public class BetterCartsPlugin : BasePlugin {
     public const string PluginGuid = "com.beesq.romestead.bettercarts";
     public const string PluginName = "Better Carts";
-    public const string PluginVersion = "1.0.0";
+    public const string PluginVersion = "1.1.0";
 
     public override void Load() {
         ModConfig.Init(Config);
