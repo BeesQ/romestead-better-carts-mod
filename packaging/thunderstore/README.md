@@ -10,7 +10,7 @@ Better Carts makes hauling with Carts more pleasant with quality-of-life feature
 
 ## Configuration
 
-All settings (master toggle, per-feature toggles, both ranges) are in-game under Settings -> Mod Settings, or in BepInEx/config/com.beesq.romestead.bettercarts.cfg
+All settings (master toggle, per-feature toggles etc.) are in-game under Settings -> Mod Settings, or in BepInEx/config/com.beesq.romestead.bettercarts.cfg
 
 ## Requirements
 
