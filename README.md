@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="packaging/assets/icon.png" width="256" alt="Better Carts icon">
+</p>
+
 # Better Carts
 
 A [BepInEx 6 CoreCLR](https://www.nexusmods.com/romestead/mods/1) mod for **Romestead** that makes hauling with Carts more pleasant with quality-of-life features, all configurable in-game.
