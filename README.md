@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/BeesQ/romestead-better-carts-mod/v1.0.0/packaging/assets/icon.png" width="256" alt="Better Carts icon">
+  <img src="https://github.com/BeesQ/romestead-better-carts-mod/blob/65600df9b08e004ccec391ff0c2d4c62f6e7ac38/packaging/assets/icon.png" width="256" alt="Better Carts icon">
 </p>
 
 # Better Carts
