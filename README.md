@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="packaging/assets/icon.png" width="256" alt="Better Carts icon">
+  <img src="https://raw.githubusercontent.com/BeesQ/romestead-better-carts-mod/v1.0.0/packaging/assets/icon.png" width="256" alt="Better Carts icon">
 </p>
 
 # Better Carts
 
-A [BepInEx 6 CoreCLR](https://www.nexusmods.com/romestead/mods/1) mod for **Romestead** that makes hauling with Carts more pleasant with quality-of-life features, all configurable in-game.
+A [BepInEx 6 CoreCLR](https://www.nexusmods.com/romestead/mods/1) mod for **Romestead** that makes hauling with Carts more pleasant with quality-of-life features, all configurable in-game
 
 ## Features
 
@@ -12,11 +12,11 @@ A [BepInEx 6 CoreCLR](https://www.nexusmods.com/romestead/mods/1) mod for **Rome
 - **Collect Range** - Carts automatically pick up loose items within a configurable radius (0-10 tiles, default 2). 0 = vanilla
 - **Deposit Range** - Carts deposit matching cargo into Material Storages within range (0-10 tiles, default 2), no more pixel-perfect parking on the storage pad. 0 = vanilla
 
-All behavior is server-authoritative, so in multiplayer only the host needs the mod.
+All behavior is server-authoritative, so in multiplayer only the host needs the mod
 
 ## Configuration
 
-Settings live under **Settings -> Mod Settings** in-game (via [Mod Settings Menu](https://www.nexusmods.com/romestead/mods/8)), or in `BepInEx/config/com.beesq.romestead.bettercarts.cfg`.
+Settings live under **Settings -> Mod Settings** in-game (via [Mod Settings Menu](https://www.nexusmods.com/romestead/mods/8)), or in `BepInEx/config/com.beesq.romestead.bettercarts.cfg`
 
 | Section | Key | Default | Meaning |
 | --- | --- | --- | --- |
@@ -27,13 +27,20 @@ Settings live under **Settings -> Mod Settings** in-game (via [Mod Settings Menu
 
 ## Install (players)
 
+Recommended: grab it from a mod site, which also lists the Requirements below for you
+
+- **Nexus Mods**: https://www.nexusmods.com/romestead/mods/91
+- **Thunderstore**: https://thunderstore.io/c/romestead/p/BeesQ/BetterCarts (supports Install with Mod Manager)
+
+Manual (works with a build from any source, including this repo's [Releases](https://github.com/BeesQ/romestead-better-carts-mod/releases)):
+
 1. Install the [Romestead BepInEx Mod Loader](https://www.nexusmods.com/romestead/mods/1) and [Mod Settings Menu](https://www.nexusmods.com/romestead/mods/8).
 2. Drop `BetterCarts.dll` into `Romestead/BepInEx/plugins/`.
 3. Launch the game through Steam.
 
 ## Build (developers)
 
-Requires the .NET 8 SDK and a local Romestead install with the BepInEx loader already set up (the project references DLLs from the game folder).
+Requires the .NET 8 SDK and a local Romestead install with the BepInEx loader already set up (the project references DLLs from the game folder)
 
 1. Set the game path once, then restart your terminal/IDE:
    ```
@@ -44,15 +51,20 @@ Requires the .NET 8 SDK and a local Romestead install with the BepInEx loader al
    dotnet build -c Release
    ```
 
-`BetterCarts.dll` is produced in `bin/Release/` and, by default, auto-copied into `BepInEx/plugins`. Pass `-p:CopyToGamePlugins=false` to skip the copy, or `-p:GamePath="..."` to override the path for a single build.
+`BetterCarts.dll` is produced in `bin/Release/` and, by default, auto-copied into `BepInEx/plugins`. Pass `-p:CopyToGamePlugins=false` to skip the copy, or `-p:GamePath="..."` to override the path for a single build
 
-No game or loader assemblies are redistributed - they are referenced from your local install at compile time only.
+No game or loader assemblies are redistributed - they are referenced from your local install at compile time only
 
 ## License
 
-Released under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE)
+
+## Bug Reports and Feedback
+
+Please [open an issue](https://github.com/BeesQ/romestead-better-carts-mod/issues) on this repo
 
 ## Links
 
 - Nexus Mods: https://www.nexusmods.com/romestead/mods/91
+- Thunderstore: https://thunderstore.io/c/romestead/p/BeesQ/BetterCarts
 - More from me: https://solo.to/BeesQ

@@ -13,7 +13,7 @@ All settings (master toggle, per-feature toggles, both ranges) are in-game under
 [size=4][b]Requirements[/b][/size]
 [list]
 [*][url=https://www.nexusmods.com/romestead/mods/1]BepinEx 6 For Romestead (Mod Loader)[/url][/*]
-[*][url=https://www.nexusmods.com/romestead/mods/8]Mod Settings Menu[/url][/*]
+[*][url=https://www.nexusmods.com/romestead/mods/8]Mod Settings Menu (Settings Menu)[/url][/*]
 [/list]
 
 [size=4][b]Multiplayer[/b][/size]
@@ -28,9 +28,12 @@ Extract the zip into your Romestead folder (the dll lands in BepInEx/plugins), t
 [*]Deposit takes only matching resources from Cart cargo, Output pads are untouched[/*]
 [/list]
 
+[size=4][b]Bug Reports and Feedback[/b][/size]
+Please submit through GitHub Issues on the source repo (link below)
+
 [size=4][b]Links[/b][/size]
 [list]
 [*]Source code (MIT): [url=https://github.com/BeesQ/romestead-better-carts-mod]GitHub[/url][/*]
-[*]Also on Thunderstore: [url=https://thunderstore.io/c/romestead/p/BeesQ/BetterCarts/]thunderstore.io[/url][/*]
+[*]Also on Thunderstore: [url=https://thunderstore.io/c/romestead/p/BeesQ/BetterCarts]thunderstore.io[/url][/*]
 [*]More from me: [url=https://solo.to/BeesQ]solo.to/BeesQ[/url][/*]
 [/list]
