@@ -1,0 +1,10 @@
+{
+  "name": "BetterCarts",
+  "version_number": "1.0.0",
+  "website_url": "https://github.com/BeesQ/romestead-better-carts-mod",
+  "description": "Cart QoL: chain overflow to the next cart, ranged collect of loose items, ranged deposit into Material Storages. Configurable in-game.",
+  "dependencies": [
+    "Romestead_Modding-BepInExPack_Romestead-0.4.1",
+    "Ice_Box_Studio_Romestead-ModSettingsMenu-1.0.7"
+  ]
+}
