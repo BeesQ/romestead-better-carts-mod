@@ -3,8 +3,10 @@ Better Carts makes hauling with Carts more pleasant with quality-of-life feature
 [size=4][b]Features[/b][/size]
 [list]
 [*][b]Chain Overflow[/b] - when a full Cart picks up an item, it is passed to the next Cart in the chain with a free slot. Nothing is left behind until every chained Cart is full[/*]
+[*][b]Bucket Priority[/b] - prefer grabbing an empty Bucket when unloading a Cart[/*]
 [*][b]Collect Range[/b] - Carts automatically pick up loose items within a configurable radius (0-10 tiles, default 2). 0 = vanilla[/*]
-[*][b]Deposit Range[/b] - Carts deposit matching cargo into Material Storages within range (0-10 tiles, default 2), no more pixel-perfect parking on the storage pad. 0 = vanilla[/*]
+[*][b]Deposit Range[/b] - Carts deposit matching cargo into Material Storages within range (0-10 tiles, default 2). 0 = vanilla[/*]
+[*][b]Connect Range[/b] - free Carts are pulled toward a Cart the player is pulling once in range (0-10 tiles, default 2). 0 = vanilla[/*]
 [/list]
 
 [size=4][b]Configuration[/b][/size]
