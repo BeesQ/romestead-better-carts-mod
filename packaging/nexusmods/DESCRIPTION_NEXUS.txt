@@ -1,0 +1,36 @@
+Better Carts makes hauling with Carts more pleasant with quality-of-life features, all configurable in-game
+
+[size=4][b]Features[/b][/size]
+[list]
+[*][b]Chain Overflow[/b] - when a full Cart picks up an item, it is passed to the next Cart in the chain with a free slot. Nothing is left behind until every chained Cart is full[/*]
+[*][b]Collect Range[/b] - Carts automatically pick up loose items within a configurable radius (0-10 tiles, default 2). 0 = vanilla[/*]
+[*][b]Deposit Range[/b] - Carts deposit matching cargo into Material Storages within range (0-10 tiles, default 2), no more pixel-perfect parking on the storage pad. 0 = vanilla[/*]
+[/list]
+
+[size=4][b]Configuration[/b][/size]
+All settings (master toggle, per-feature toggles, both ranges) are in-game under Settings -> Mod Settings, or in BepInEx/config/com.beesq.romestead.bettercarts.cfg
+
+[size=4][b]Requirements[/b][/size]
+[list]
+[*][url=https://www.nexusmods.com/romestead/mods/1]BepinEx 6 For Romestead (Mod Loader)[/url][/*]
+[*][url=https://www.nexusmods.com/romestead/mods/8]Mod Settings Menu[/url][/*]
+[/list]
+
+[size=4][b]Multiplayer[/b][/size]
+Server-authoritative: only the host needs the mod, joining players do not need anything installed
+
+[size=4][b]Install[/b][/size]
+Extract the zip into your Romestead folder (the dll lands in BepInEx/plugins), then launch the game through Steam
+
+[size=4][b]Notes[/b][/size]
+[list]
+[*]Safe to add or remove at any time, the mod stores nothing in your save[/*]
+[*]Deposit takes only matching resources from Cart cargo, Output pads are untouched[/*]
+[/list]
+
+[size=4][b]Links[/b][/size]
+[list]
+[*]Source code (MIT): [url=https://github.com/BeesQ/romestead-better-carts-mod]GitHub[/url][/*]
+[*]Also on Thunderstore: [url=https://thunderstore.io/c/romestead/p/BeesQ/BetterCarts/]thunderstore.io[/url][/*]
+[*]More from me: [url=https://solo.to/BeesQ]solo.to/BeesQ[/url][/*]
+[/list]
