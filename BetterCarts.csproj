@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
     <AssemblyName>BetterCarts</AssemblyName>
     <RootNamespace>BetterCarts</RootNamespace>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -51,7 +51,8 @@
   </ItemGroup>
 
   <Target Name="CopyToGamePlugins" AfterTargets="Build" Condition="'$(CopyToGamePlugins)' == 'true'">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GamePath)\BepInEx\plugins" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GamePath)\BepInEx\plugins\BetterCarts" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\packaging\assets\icon.png" DestinationFolder="$(GamePath)\BepInEx\plugins\BetterCarts" />
   </Target>
 
   <Target Name="ValidateGamePath" BeforeTargets="ResolveAssemblyReferences">
