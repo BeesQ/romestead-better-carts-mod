@@ -41,6 +41,7 @@ internal static class StockpileRangePatch {
         new ConditionalWeakTable<object, FillState>();
 
     private static readonly List<EntityWrapper> ReuseList = new List<EntityWrapper>();
+    private static readonly List<EntityWrapper> ReuseCarriedList = new List<EntityWrapper>();
     private static readonly List<RequestSpawnEntityMessage> ReuseSpawnList = new List<RequestSpawnEntityMessage>();
     private static readonly ResourceAmount[] ReuseTake = new ResourceAmount[1];
     private static readonly HashSet<Guid> ReuseVisited = new HashSet<Guid>();
@@ -57,7 +58,6 @@ internal static class StockpileRangePatch {
     [HarmonyPatch(typeof(ServerMaterialStorageStackController), nameof(ServerMaterialStorageStackController.Update), typeof(GameTime))]
     private static class TakeSolidsFromOutputStacks {
         private static void Postfix(ServerMaterialStorageStackController __instance) {
-            TryFillBuckets();
             if (!ModConfig.Enabled.Value || !ModConfig.StockpileRangeEnabled.Value) {
                 return;
             }
@@ -121,11 +121,9 @@ internal static class StockpileRangePatch {
                 return;
             }
             float tileSize = WorldInfo.TileSize;
-            Rectangle tileBounds = building.InstanceModel.TileBounds;
-            Vector3 stackWorldPosition = tileBounds.Location.ToVector3Xy() * tileSize + stack.Position;
-            Rectangle buildingZone = new Rectangle((int)(tileBounds.X * tileSize), (int)(tileBounds.Y * tileSize),
-                (int)(tileBounds.Width * tileSize), (int)(tileBounds.Height * tileSize));
+            Vector3 stackWorldPosition = building.InstanceModel.TileBounds.Location.ToVector3Xy() * tileSize + stack.Position;
             int reach = (int)(range * tileSize);
+            // no footprint exclusion: producers have no pits, and production TileBounds can swallow the whole take zone (Quarry/Lumberjack)
             Rectangle takeZone = new Rectangle((int)(stackWorldPosition.X - tileSize * 0.5f),
                 (int)(stackWorldPosition.Y - tileSize * 0.5f), (int)tileSize, (int)tileSize);
             takeZone.Inflate(reach, reach);
@@ -139,9 +137,6 @@ internal static class StockpileRangePatch {
                     continue;
                 }
                 if (!(candidate.Controller is ServerCart2Controller cart)) {
-                    continue;
-                }
-                if (buildingZone.Contains((int)candidate.Position2.X, (int)candidate.Position2.Y)) {
                     continue;
                 }
                 if (!IsEligible(cart, whilePulled, whileParked) || !HasChainCapacity(cart)) {
@@ -171,19 +166,17 @@ internal static class StockpileRangePatch {
         }
     }
 
-    // the Clay Pit's vat (ServerMaterialStorageFluidContainerController) has an EMPTY server class and no Output stack, so the shared base tick is the only per-building trigger for bucket resources
+    // the Clay Pit's vat (ServerMaterialStorageFluidContainerController) has an EMPTY server class and no Output stack, so the shared base tick is the only per-vat trigger for bucket resources
     [HarmonyPatch(typeof(AbstractController), nameof(AbstractController.Update), typeof(GameTime))]
-    private static class FillBucketsOnBuildingTick {
-        private static void Postfix() {
-            TryFillBuckets();
+    private static class FillBucketsFromFluidVats {
+        private static void Postfix(AbstractController __instance) {
+            if (__instance is ServerMaterialStorageFluidContainerController vat) {
+                TryFillBuckets(vat);
+            }
         }
     }
 
-    private static void TryFillBuckets() {
-        var building = ServerTempState.CurrentlyUpdatingBuilding;
-        if (building == null) {
-            return;
-        }
+    private static void TryFillBuckets(ServerMaterialStorageFluidContainerController vat) {
         if (!ModConfig.Enabled.Value || !ModConfig.StockpileRangeEnabled.Value) {
             return;
         }
@@ -196,14 +189,19 @@ internal static class StockpileRangePatch {
         if (!whilePulled && !whileParked) {
             return;
         }
-        if (!building.InstanceModel.OutputResourceStorageId.HasValue) {
+        var building = ServerTempState.CurrentlyUpdatingBuilding;
+        if (building == null || !building.InstanceModel.OutputResourceStorageId.HasValue) {
             return;
         }
         Guid outputStorageId = building.InstanceModel.OutputResourceStorageId.Value;
         if (building.InstanceModel.ResourceStorageId.HasValue && building.InstanceModel.ResourceStorageId.Value == outputStorageId) {
             return;
         }
-        FillState state = FillTimers.GetOrCreateValue(building);
+        EntityWrapper vatEntity = vat.Entity;
+        if (vatEntity == null || vatEntity.Removed) {
+            return;
+        }
+        FillState state = FillTimers.GetOrCreateValue(vat);
         long now = Environment.TickCount64;
         if (now < state.NextTick) {
             return;
@@ -232,41 +230,39 @@ internal static class StockpileRangePatch {
             return;
         }
         float tileSize = WorldInfo.TileSize;
-        Rectangle tileBounds = building.InstanceModel.TileBounds;
-        Rectangle buildingZone = new Rectangle((int)(tileBounds.X * tileSize), (int)(tileBounds.Y * tileSize),
-            (int)(tileBounds.Width * tileSize), (int)(tileBounds.Height * tileSize));
-        Rectangle takeZone = buildingZone;
+        Vector3 vatWorldPosition = building.InstanceModel.TileBounds.Location.ToVector3Xy() * tileSize + vatEntity.Position;
         int reach = (int)(range * tileSize);
+        Rectangle takeZone = new Rectangle((int)(vatWorldPosition.X - tileSize * 0.5f),
+            (int)(vatWorldPosition.Y - tileSize * 0.5f), (int)tileSize, (int)tileSize);
         takeZone.Inflate(reach, reach);
-        Vector2 zoneCenter = buildingZone.Center.ToVector2();
+        Vector2 vatCenter = new Vector2(vatWorldPosition.X, vatWorldPosition.Y);
         ReuseList.Clear();
         collisions.GetEntitiesInRectangleArea(takeZone, ReuseList);
-        ServerBucketController bestBucket = null;
-        float bestBucketDistanceSquared = float.MaxValue;
+        ServerCart2Controller bestCart = null;
+        float bestCartDistanceSquared = float.MaxValue;
         foreach (EntityWrapper candidate in ReuseList) {
             if (candidate.Removed || candidate.PositionZ > MaxTakeZ) {
                 continue;
             }
-            if (!(candidate.Controller is ServerBucketController bucket)
-                || bucket.Content != BucketEntityHelperShared.BucketContentType.Empty) {
+            if (!(candidate.Controller is ServerCart2Controller cart)) {
                 continue;
             }
-            EntityWrapper carrier = candidate.CarrierEntity;
-            if (carrier == null || carrier.Removed || !(carrier.Controller is ServerCart2Controller carrierCart)) {
+            if (!IsEligible(cart, whilePulled, whileParked)) {
                 continue;
             }
-            if (buildingZone.Contains((int)carrier.Position2.X, (int)carrier.Position2.Y)) {
+            if (FindEmptyBucketInChain(cart) == null) {
                 continue;
             }
-            if (!IsEligible(carrierCart, whilePulled, whileParked)) {
-                continue;
-            }
-            float distanceSquared = Vector2.DistanceSquared(carrier.Position2, zoneCenter);
-            if (distanceSquared < bestBucketDistanceSquared) {
-                bestBucketDistanceSquared = distanceSquared;
-                bestBucket = bucket;
+            float distanceSquared = Vector2.DistanceSquared(candidate.Position2, vatCenter);
+            if (distanceSquared < bestCartDistanceSquared) {
+                bestCartDistanceSquared = distanceSquared;
+                bestCart = cart;
             }
         }
+        if (bestCart == null) {
+            return;
+        }
+        ServerBucketController bestBucket = FindEmptyBucketInChain(bestCart);
         if (bestBucket == null) {
             return;
         }
@@ -275,6 +271,78 @@ internal static class StockpileRangePatch {
             bestBucket.SetContentType(BucketEntityHelperShared.BucketContentType.Resource, bucketResourceId, 1, syncOverNetwork: true);
             ServerSendMessageHelper.PlaySoundOnPosition(bestBucket.Entity.Position, targetWorldId, GetFillSound(bucketResourceId));
         }
+    }
+
+    private static ServerBucketController FindEmptyBucketInChain(ServerCart2Controller cart) {
+        ServerBucketController bucket = FindEmptyBucketOnCart(cart);
+        if (bucket != null) {
+            return bucket;
+        }
+        if (!ModConfig.ChainOverflowEnabled.Value) {
+            return null;
+        }
+        ReuseVisited.Clear();
+        ReuseVisited.Add(cart.Entity.Id);
+        bucket = WalkFindEmptyBucket(cart, followers: true);
+        if (bucket != null) {
+            return bucket;
+        }
+        return WalkFindEmptyBucket(cart, followers: false);
+    }
+
+    private static ServerBucketController WalkFindEmptyBucket(ServerCart2Controller source, bool followers) {
+        ServerCart2Controller current = source;
+        for (int i = 0; i < MaxChainWalk; i++) {
+            Guid? nextId = followers ? current.FollowerCartId : current.FollowingId;
+            if (!nextId.HasValue || !ReuseVisited.Add(nextId.Value)) {
+                return null;
+            }
+            EntityWrapper nextEntity = source.Entity.System.GetEntityById(nextId);
+            if (nextEntity == null || nextEntity.Removed) {
+                return null;
+            }
+            if (!(nextEntity.Controller is ServerCart2Controller nextCart)) {
+                return null;
+            }
+            ServerBucketController bucket = FindEmptyBucketOnCart(nextCart);
+            if (bucket != null) {
+                return bucket;
+            }
+            current = nextCart;
+        }
+        return null;
+    }
+
+    // buckets are found via carrier enumeration, not via the Carried1..5 slot fields, so capacity-changing cart mods stay compatible
+    private static ServerBucketController FindEmptyBucketOnCart(ServerCart2Controller cart) {
+        EntityWrapper cartEntity = cart.Entity;
+        if (cartEntity == null || cartEntity.Removed) {
+            return null;
+        }
+        var collisions = ServerWorldHandler.GetEntityCollisionsOrNull(cartEntity.WorldId);
+        if (collisions == null) {
+            return null;
+        }
+        int radius = (int)(WorldInfo.TileSize * 2f);
+        Rectangle around = new Rectangle((int)cartEntity.Position2.X - radius, (int)cartEntity.Position2.Y - radius,
+            radius * 2, radius * 2);
+        ReuseCarriedList.Clear();
+        collisions.GetEntitiesInRectangleArea(around, ReuseCarriedList);
+        foreach (EntityWrapper item in ReuseCarriedList) {
+            if (item.Removed) {
+                continue;
+            }
+            if (!(item.Controller is ServerBucketController bucket)
+                || bucket.Content != BucketEntityHelperShared.BucketContentType.Empty) {
+                continue;
+            }
+            EntityWrapper carrier = item.CarrierEntity;
+            if (carrier == null || carrier.Id != cartEntity.Id) {
+                continue;
+            }
+            return bucket;
+        }
+        return null;
     }
 
     private static bool IsBucketResource(string resourceId) {
