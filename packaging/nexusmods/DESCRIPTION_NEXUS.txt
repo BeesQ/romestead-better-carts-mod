@@ -4,9 +4,11 @@ Better Carts makes hauling with Carts more pleasant with quality-of-life feature
 [list]
 [*][b]Chain Overflow[/b] - when a full Cart picks up an item, it is passed to the next Cart in the chain with a free slot. Nothing is left behind until every chained Cart is full[/*]
 [*][b]Bucket Priority[/b] - prefer grabbing an empty Bucket when unloading a Cart[/*]
-[*][b]Collect Range[/b] - Carts automatically pick up loose items within a configurable radius (0-10 tiles, default 2). 0 = vanilla[/*]
+[*][b]Cart Release Fix[/b] - releasing a pulled Cart never grabs a different Cart on the same press[/*]
+[*][b]Collect Range[/b] - Carts automatically pick up loose items within a configurable range (0-10 tiles, default 2). 0 = vanilla[/*]
 [*][b]Deposit Range[/b] - Carts deposit matching cargo into Material Storages within range (0-10 tiles, default 2). 0 = vanilla[/*]
 [*][b]Connect Range[/b] - free Carts are pulled toward a Cart the player is pulling once in range (0-10 tiles, default 2). 0 = vanilla[/*]
+[*][b]Stockpile Range[/b] - Carts take resources from building Output stockpiles within range, into free slots and empty Buckets on the Cart (0-10 tiles, default 2). 0 = vanilla[/*]
 [/list]
 
 [size=4][b]Configuration[/b][/size]
@@ -19,15 +21,21 @@ All settings (master toggle, per-feature toggles etc.) are in-game under Setting
 [/list]
 
 [size=4][b]Multiplayer[/b][/size]
-Server-authoritative: only the host needs the mod, joining players do not need anything installed
+Server-authoritative features: only the host needs the mod, joining players do not need anything installed. Bucket Priority and Cart Release Fix are client-side: they apply to each player that has the mod installed
+
+[size=4][b]Compatibility[/b][/size]
+[list]
+[*][url=https://www.nexusmods.com/romestead/mods/92]Iron Cart[/url] by burdock12 - compatible, tested together[/*]
+[/list]
 
 [size=4][b]Install[/b][/size]
-Extract the zip into your Romestead folder (the dll lands in BepInEx/plugins), then launch the game through Steam
+Extract the zip into your Romestead folder (the mod files land in BepInEx/plugins/BetterCarts), then launch the game through Steam
 
 [size=4][b]Notes[/b][/size]
 [list]
 [*]Safe to add or remove at any time, the mod stores nothing in your save[/*]
-[*]Deposit takes only matching resources from Cart cargo, Output pads are untouched[/*]
+[*]Deposit Range takes only matching resources from Cart cargo[/*]
+[*]Stockpile Range takes only from Output stockpiles, a building's input storage is never drained[/*]
 [/list]
 
 [size=4][b]Bug Reports and Feedback[/b][/size]
