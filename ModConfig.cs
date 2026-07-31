@@ -13,6 +13,8 @@ internal static class ModConfig {
     internal static ConfigEntry<int> ConnectRange;
     internal static ConfigEntry<bool> BucketPriorityEnabled;
     internal static ConfigEntry<bool> CartReleaseFixEnabled;
+    internal static ConfigEntry<bool> CartCapacityEnabled;
+    internal static ConfigEntry<string> KnownCarts;
     internal static ConfigEntry<bool> StockpileRangeEnabled;
     internal static ConfigEntry<int> StockpileRange;
     internal static ConfigEntry<bool> StockpileWhilePulled;
@@ -27,21 +29,21 @@ internal static class ModConfig {
                 SectionTag("Chain Overflow", 1), EntryTag("Enabled", 0)));
         CollectRangeEnabled = config.Bind("Collect Range", "Enabled", true,
             new ConfigDescription("Carts automatically pick up loose items within range.", null,
-                SectionTag("Collect Range", 4), EntryTag("Enabled", 0)));
+                SectionTag("Collect Range", 5), EntryTag("Enabled", 0)));
         CollectRange = config.Bind("Collect Range", "Range", 2,
             new ConfigDescription("Collect reach in tiles per side. 0 = vanilla (touch only).",
                 new AcceptableValueRange<int>(0, 10),
                 EntryTag("Range", 1)));
         DepositRangeEnabled = config.Bind("Deposit Range", "Enabled", true,
             new ConfigDescription("Carts deposit matching cargo into Material Storages within range.", null,
-                SectionTag("Deposit Range", 5), EntryTag("Enabled", 0)));
+                SectionTag("Deposit Range", 6), EntryTag("Enabled", 0)));
         DepositRange = config.Bind("Deposit Range", "Range", 2,
             new ConfigDescription("Deposit reach in tiles per side, 0 = vanilla (park on the storage).",
                 new AcceptableValueRange<int>(0, 10),
                 EntryTag("Range", 1)));
         ConnectRangeEnabled = config.Bind("Connect Range", "Enabled", true,
             new ConfigDescription("A free cart is pulled toward a cart the player is pulling once it is within range, so they connect without touching.", null,
-                SectionTag("Connect Range", 6), EntryTag("Enabled", 0)));
+                SectionTag("Connect Range", 7), EntryTag("Enabled", 0)));
         ConnectRange = config.Bind("Connect Range", "Range", 2,
             new ConfigDescription("Connect reach in tiles per side. 0 = vanilla (touch only).",
                 new AcceptableValueRange<int>(0, 10),
@@ -52,9 +54,17 @@ internal static class ModConfig {
         CartReleaseFixEnabled = config.Bind("Cart Release Fix", "Enabled", true,
             new ConfigDescription("Releasing a pulled cart with the interact key never grabs a different cart on the same press.", null,
                 SectionTag("Cart Release Fix", 3), EntryTag("Enabled", 0)));
+        CartCapacityEnabled = config.Bind("Cart Capacity", "Enabled", false,
+            new ConfigDescription("EXPERIMENTAL. Sets how many items each cart type can carry. A cart type only appears here after you load a world once, then restart the game. In multiplayer the host decides for everyone.", null,
+                SectionTag("Cart Capacity", 4), EntryTag("Enabled (Experimental)", 0)));
+        KnownCarts = config.Bind("Cart Capacity", "Known Carts", "",
+            new ConfigDescription("Internal list of the cart types the mod has seen. Not meant to be edited by hand.", null,
+                EntryTag("Known Carts", 1, hidden: true)));
+        CartCapacity.LoadCache(KnownCarts.Value);
+        CartCapacity.BindTypeEntries(config);
         StockpileRangeEnabled = config.Bind("Stockpile Range", "Enabled", true,
             new ConfigDescription("Carts take resources from building output stockpiles within range. Solid resources go into free slots, bucket resources fill empty buckets on the cart.", null,
-                SectionTag("Stockpile Range", 7), EntryTag("Enabled", 0)));
+                SectionTag("Stockpile Range", 8), EntryTag("Enabled", 0)));
         StockpileRange = config.Bind("Stockpile Range", "Range", 2,
             new ConfigDescription("Stockpile reach in tiles per side. 0 = vanilla (off).",
                 new AcceptableValueRange<int>(0, 10),
@@ -71,7 +81,11 @@ internal static class ModConfig {
         return new { Section = section, DisplayName = section, Order = order };
     }
 
-    private static object EntryTag(string displayName, int order) {
+    internal static object EntryTag(string displayName, int order) {
         return new { DisplayName = displayName, Order = order };
+    }
+
+    internal static object EntryTag(string displayName, int order, bool hidden) {
+        return new { DisplayName = displayName, Order = order, Hidden = hidden };
     }
 }
