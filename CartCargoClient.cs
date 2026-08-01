@@ -29,7 +29,10 @@ internal static class CartCargoClient {
         if (parameters == null) {
             return;
         }
-        CartCargoSync.Unpack(parameters.GetString(CartCargoSync.CargoKey, string.Empty), ReuseIncoming);
+        string stored = parameters.GetString(CartCargoSync.CargoKey, string.Empty);
+        ModLog.OnChange("client:" + cart.Entity.Id, "CLIENT SYNC cart=" + cart.Entity.Id + " bc_cargo=\"" + stored
+            + "\" had=" + slots.Count);
+        CartCargoSync.Unpack(stored, ReuseIncoming);
         foreach (Guid id in slots) {
             if (!ReuseIncoming.Contains(id)) {
                 ReleaseOne(cart, id);
@@ -53,6 +56,7 @@ internal static class CartCargoClient {
             }
             // the local player grabbed it; vanilla UpdateSlot defers to the player the same way, and the server drops it from bc_cargo on its next sweep
             if (item.CarrierId == GameState.LocalPlayer.EntityId) {
+                ModLog.Info("CLIENT yield " + item.Id + " to local player");
                 slots.RemoveAt(i);
                 continue;
             }

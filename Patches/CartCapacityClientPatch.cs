@@ -32,7 +32,7 @@ internal static class CartCapacityClientPatch {
     [HarmonyPatch(typeof(Cart2Controller), nameof(Cart2Controller.EntityInitialize))]
     private static class Discovery {
         private static void Postfix() {
-            CartCapacity.EnsureDiscovered();
+            CartCapacity.EnsureDiscovered(false);
         }
     }
 }

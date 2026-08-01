@@ -18,6 +18,9 @@ internal static class CartCapacityPatch {
             }
             __state = true;
             __result = false;
+            ModLog.OnChange("block:" + __instance.Entity.Id,
+                "BLOCK cart=" + __instance.Entity.Id + " occupied=" + CartCargo.GetOccupied(__instance)
+                + " >= cap=" + capacity);
             return false;
         }
 
@@ -45,6 +48,8 @@ internal static class CartCapacityPatch {
             if (CartCargo.GetOccupied(__instance) >= capacity) {
                 return;
             }
+            ModLog.Info("EXTEND cart=" + __instance.Entity.Id + " taking " + entity.Id + " (cap=" + capacity
+                + " occupied=" + CartCargo.GetOccupied(__instance) + ")");
             CartCargo.PinExtra(__instance, entity);
             __result = true;
         }
@@ -58,7 +63,10 @@ internal static class CartCapacityPatch {
             if (cartEntity == null || cartEntity.Removed) {
                 return;
             }
-            CartCapacity.ObserveExact(cartEntity.BaseGuid, CartCapacity.Blessed, CartCargo.GetOccupied(cart));
+            int occupied = CartCargo.GetOccupied(cart);
+            ModLog.OnChange("refuse:" + cartEntity.Id, "REFUSAL cart=" + cartEntity.Id + " occupied=" + occupied
+                + " blessed=" + CartCapacity.Blessed + " -> exact for type " + cartEntity.BaseGuid);
+            CartCapacity.ObserveExact(cartEntity.BaseGuid, CartCapacity.Blessed, occupied);
         }
     }
 
@@ -80,7 +88,7 @@ internal static class CartCapacityPatch {
     [HarmonyPatch(typeof(ServerCart2Controller), nameof(ServerCart2Controller.EntityInitialize))]
     private static class Discovery {
         private static void Postfix() {
-            CartCapacity.EnsureDiscovered();
+            CartCapacity.EnsureDiscovered(true);
         }
     }
 }
