@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -19,8 +19,10 @@ namespace BetterCarts;
 internal sealed class CartTypeRecord {
     internal Guid Id;
     internal string Name = string.Empty;
-    internal int BaseUnblessed;
-    internal int BaseBlessed;
+    internal int ExactUnblessed;
+    internal int ExactBlessed;
+    internal int SeenUnblessed;
+    internal int SeenBlessed;
     internal ConfigEntry<int> Setting;
 }
 
@@ -64,8 +66,10 @@ internal static class CartCapacity {
             Records[id] = new CartTypeRecord {
                 Id = id,
                 Name = fields[1],
-                BaseUnblessed = ParseCount(fields[2]),
-                BaseBlessed = ParseCount(fields[3])
+                ExactUnblessed = ParseCount(fields[2]),
+                ExactBlessed = ParseCount(fields[3]),
+                SeenUnblessed = fields.Length > 4 ? ParseCount(fields[4]) : 0,
+                SeenBlessed = fields.Length > 5 ? ParseCount(fields[5]) : 0
             };
         }
     }
@@ -76,11 +80,10 @@ internal static class CartCapacity {
         ordered.Sort(Compare);
         int order = 2;
         foreach (CartTypeRecord record in ordered) {
-            int max = Math.Max(SliderMax, Math.Max(record.BaseUnblessed, record.BaseBlessed));
             record.Setting = config.Bind(SectionName, record.Id.ToString(), 0,
                 new ConfigDescription(
                     "0 = Auto (this Cart type keeps its own capacity). 1 or more sets the BASE capacity; in-game capacity upgrades are added on top of it.",
-                    new AcceptableValueRange<int>(0, max),
+                    new AcceptableValueRange<int>(0, Math.Max(SliderMax, Highest(record))),
                     ModConfig.EntryTag(Label(record), order, hidden)));
             order++;
         }
@@ -107,20 +110,40 @@ internal static class CartCapacity {
         }
     }
 
-    internal static void Observe(Guid typeId, bool blessed, int count) {
+    // a refusal proves the exact number: every slot the Cart knows about was taken
+    internal static void ObserveExact(Guid typeId, bool blessed, int count) {
         if (count <= 0 || typeId == Guid.Empty) {
             return;
         }
         CartTypeRecord record = Track(typeId);
         if (blessed) {
-            if (count > record.BaseBlessed) {
-                record.BaseBlessed = count;
+            if (count != record.ExactBlessed) {
+                record.ExactBlessed = count;
                 _dirty = true;
             }
             return;
         }
-        if (count > record.BaseUnblessed) {
-            record.BaseUnblessed = count;
+        if (count != record.ExactUnblessed) {
+            record.ExactUnblessed = count;
+            _dirty = true;
+        }
+    }
+
+    // seeing N items on a Cart only proves capacity >= N, so this never feeds the label
+    internal static void ObserveSeen(Guid typeId, bool blessed, int count) {
+        if (count <= 0 || typeId == Guid.Empty) {
+            return;
+        }
+        CartTypeRecord record = Track(typeId);
+        if (blessed) {
+            if (count > record.SeenBlessed) {
+                record.SeenBlessed = count;
+                _dirty = true;
+            }
+            return;
+        }
+        if (count > record.SeenUnblessed) {
+            record.SeenUnblessed = count;
             _dirty = true;
         }
     }
@@ -156,7 +179,8 @@ internal static class CartCapacity {
         }
         bool blessed = Blessed;
         if (cartEntity != null && Records.TryGetValue(cartEntity.BaseGuid, out CartTypeRecord record)) {
-            int observed = blessed ? Math.Max(record.BaseBlessed, record.BaseUnblessed) : record.BaseUnblessed;
+            int unblessed = Math.Max(record.ExactUnblessed, record.SeenUnblessed);
+            int observed = blessed ? Math.Max(Math.Max(record.ExactBlessed, record.SeenBlessed), unblessed) : unblessed;
             if (observed > 0) {
                 return observed;
             }
@@ -255,11 +279,11 @@ internal static class CartCapacity {
     }
 
     private static int KnownBase(CartTypeRecord record) {
-        if (record.BaseUnblessed > 0) {
-            return record.BaseUnblessed;
+        if (record.ExactUnblessed > 0) {
+            return record.ExactUnblessed;
         }
-        if (record.BaseBlessed > 0) {
-            return Math.Max(1, record.BaseBlessed - SeedBonus);
+        if (record.ExactBlessed > 0) {
+            return Math.Max(1, record.ExactBlessed - SeedBonus);
         }
         return 0;
     }
@@ -268,10 +292,16 @@ internal static class CartCapacity {
         if (!blessed) {
             return 0;
         }
-        if (record.BaseUnblessed > 0 && record.BaseBlessed > record.BaseUnblessed) {
-            return record.BaseBlessed - record.BaseUnblessed;
+        if (record.ExactUnblessed > 0 && record.ExactBlessed > record.ExactUnblessed) {
+            return record.ExactBlessed - record.ExactUnblessed;
         }
         return SeedBonus;
+    }
+
+    private static int Highest(CartTypeRecord record) {
+        int unblessed = Math.Max(record.ExactUnblessed, record.SeenUnblessed);
+        int blessed = Math.Max(record.ExactBlessed, record.SeenBlessed);
+        return Math.Max(unblessed, blessed);
     }
 
     private static string Serialize() {
@@ -282,8 +312,10 @@ internal static class CartCapacity {
             }
             builder.Append(record.Id.ToString()).Append('|')
                 .Append(Sanitize(record.Name)).Append('|')
-                .Append(record.BaseUnblessed.ToString(CultureInfo.InvariantCulture)).Append('|')
-                .Append(record.BaseBlessed.ToString(CultureInfo.InvariantCulture));
+                .Append(record.ExactUnblessed.ToString(CultureInfo.InvariantCulture)).Append('|')
+                .Append(record.ExactBlessed.ToString(CultureInfo.InvariantCulture)).Append('|')
+                .Append(record.SeenUnblessed.ToString(CultureInfo.InvariantCulture)).Append('|')
+                .Append(record.SeenBlessed.ToString(CultureInfo.InvariantCulture));
         }
         return builder.ToString();
     }
