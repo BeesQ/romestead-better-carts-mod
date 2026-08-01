@@ -2,7 +2,6 @@ using CandideServer.Entities.Controllers;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Shared.Entity;
-using Shared.Entity.Base;
 
 namespace BetterCarts.Patches;
 
@@ -77,8 +76,8 @@ internal static class CartCapacityPatch {
         }
     }
 
-    // the doodad database only exists once a world has been loaded, so discovery waits for a tick instead of patching the load itself
-    [HarmonyPatch(typeof(AbstractController), nameof(AbstractController.Update), typeof(GameTime))]
+    // discovery needs a loaded doodad database, and a Cart existing proves there is one. Hanging it off EntityInitialize costs one guarded bool per Cart spawn instead of one per controller per tick
+    [HarmonyPatch(typeof(ServerCart2Controller), nameof(ServerCart2Controller.EntityInitialize))]
     private static class Discovery {
         private static void Postfix() {
             CartCapacity.EnsureDiscovered();

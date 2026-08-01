@@ -19,10 +19,15 @@ namespace BetterCarts;
 internal sealed class CartTypeRecord {
     internal Guid Id;
     internal string Name = string.Empty;
+
+    // refusal-proven and CACHED: a Cart that refused an item has every slot it knows about taken, so the count is its capacity
     internal int ExactUnblessed;
     internal int ExactBlessed;
+
+    // lower bounds, RUNTIME ONLY: seeing N items proves capacity >= N and nothing more. Persisting that is what once made the menu claim an Iron Cart holds 2
     internal int SeenUnblessed;
     internal int SeenBlessed;
+
     internal ConfigEntry<int> Setting;
 }
 
@@ -30,7 +35,7 @@ internal static class CartCapacity {
     internal const int VanillaBase = 4;
     internal const int VanillaBlessed = 5;
 
-    private const int SeedBonus = 1;
+    private const string CacheVersion = "v2";
     private const int SliderMax = 20;
     private const int DiscoveryRetryMs = 1000;
     private const string SectionName = "Cart Capacity";
@@ -50,16 +55,22 @@ internal static class CartCapacity {
         get { return WorldFlagsHelper.HasFlag(ServerGameState.WorldFlags, WorldFlagNames.MercuryCartCapacity); }
     }
 
+    // the version token discards anything an older build wrote rather than reinterpreting it; misreading old lower bounds as exact numbers is what produced a wrong vanilla figure in the menu
     internal static void LoadCache(string raw) {
         Records.Clear();
         if (string.IsNullOrEmpty(raw)) {
             return;
         }
-        foreach (string entry in raw.Split(';')) {
-            if (entry.Length == 0) {
+        string[] parts = raw.Split(';');
+        if (parts.Length == 0 || !string.Equals(parts[0], CacheVersion, StringComparison.Ordinal)) {
+            _dirty = true;
+            return;
+        }
+        for (int i = 1; i < parts.Length; i++) {
+            if (parts[i].Length == 0) {
                 continue;
             }
-            string[] fields = entry.Split('|');
+            string[] fields = parts[i].Split('|');
             if (fields.Length < 4 || !Guid.TryParse(fields[0], out Guid id)) {
                 continue;
             }
@@ -67,9 +78,7 @@ internal static class CartCapacity {
                 Id = id,
                 Name = fields[1],
                 ExactUnblessed = ParseCount(fields[2]),
-                ExactBlessed = ParseCount(fields[3]),
-                SeenUnblessed = fields.Length > 4 ? ParseCount(fields[4]) : 0,
-                SeenBlessed = fields.Length > 5 ? ParseCount(fields[5]) : 0
+                ExactBlessed = ParseCount(fields[3])
             };
         }
     }
@@ -80,11 +89,10 @@ internal static class CartCapacity {
         ordered.Sort(Compare);
         int order = 2;
         foreach (CartTypeRecord record in ordered) {
+            int max = Math.Max(SliderMax, Math.Max(record.ExactUnblessed, record.ExactBlessed));
             record.Setting = config.Bind(SectionName, record.Id.ToString(), 0,
-                new ConfigDescription(
-                    "0 = Auto (this Cart type keeps its own capacity). 1 or more sets the BASE capacity; in-game capacity upgrades are added on top of it.",
-                    new AcceptableValueRange<int>(0, Math.Max(SliderMax, Highest(record))),
-                    ModConfig.EntryTag(Label(record), order, hidden)));
+                new ConfigDescription(Describe(record), new AcceptableValueRange<int>(0, max),
+                    ModConfig.EntryTag(DisplayName(record), order, hidden)));
             order++;
         }
     }
@@ -110,7 +118,7 @@ internal static class CartCapacity {
         }
     }
 
-    // a refusal proves the exact number: every slot the Cart knows about was taken
+    // assignment, not Math.Max: a refusal is authoritative, so a cart mod that changes its capacity in an update corrects itself on the next refusal
     internal static void ObserveExact(Guid typeId, bool blessed, int count) {
         if (count <= 0 || typeId == Guid.Empty) {
             return;
@@ -129,23 +137,16 @@ internal static class CartCapacity {
         }
     }
 
-    // seeing N items on a Cart only proves capacity >= N, so this never feeds the label
     internal static void ObserveSeen(Guid typeId, bool blessed, int count) {
         if (count <= 0 || typeId == Guid.Empty) {
             return;
         }
         CartTypeRecord record = Track(typeId);
         if (blessed) {
-            if (count > record.SeenBlessed) {
-                record.SeenBlessed = count;
-                _dirty = true;
-            }
+            record.SeenBlessed = Math.Max(record.SeenBlessed, count);
             return;
         }
-        if (count > record.SeenUnblessed) {
-            record.SeenUnblessed = count;
-            _dirty = true;
-        }
+        record.SeenUnblessed = Math.Max(record.SeenUnblessed, count);
     }
 
     internal static void FlushCache() {
@@ -156,7 +157,7 @@ internal static class CartCapacity {
         ModConfig.KnownCarts.Value = Serialize();
     }
 
-    // 0 means "do not interfere": the master toggle, the feature toggle or the per-type value is off / Auto
+    // 0 means "do not interfere": the master toggle, the feature toggle or the per-type value is off / Auto. A configured number is EXACT - the blessing adds nothing on top of it
     internal static int GetEnforcedCapacity(EntityWrapper cartEntity) {
         if (cartEntity == null || !Enforcing) {
             return 0;
@@ -164,11 +165,7 @@ internal static class CartCapacity {
         if (!Records.TryGetValue(cartEntity.BaseGuid, out CartTypeRecord record) || record.Setting == null) {
             return 0;
         }
-        int configured = record.Setting.Value;
-        if (configured <= 0) {
-            return 0;
-        }
-        return configured + Bonus(record, Blessed);
+        return Math.Max(0, record.Setting.Value);
     }
 
     // best available answer to "how much fits on this Cart", used by the free-slot rule even when the feature is off
@@ -237,7 +234,7 @@ internal static class CartCapacity {
         return record;
     }
 
-    // several constructions can point at ONE doodad Guid (a joiner resolves Iron Cart's cart:2 to the bronze doodad), so a name is only trustworthy when exactly one matches
+    // several constructions can point at ONE doodad Guid, so a name is only trustworthy when exactly one matches
     private static string ResolveName(Guid id) {
         var map = ConstructionDataBase.DataMap;
         if (map == null) {
@@ -269,53 +266,38 @@ internal static class CartCapacity {
         return StringDefinitions.TryGetString(key, out string translated) ? translated : key;
     }
 
-    private static string Label(CartTypeRecord record) {
-        string name = string.IsNullOrEmpty(record.Name) ? UnknownName : record.Name;
-        int known = KnownBase(record);
-        if (known <= 0) {
-            return name + " Capacity - Auto";
-        }
-        return name + " Capacity - " + known.ToString(CultureInfo.InvariantCulture) + " (Vanilla)";
+    private static string DisplayName(CartTypeRecord record) {
+        return (string.IsNullOrEmpty(record.Name) ? UnknownName : record.Name) + " Capacity";
     }
 
-    private static int KnownBase(CartTypeRecord record) {
-        if (record.ExactUnblessed > 0) {
-            return record.ExactUnblessed;
+    // states only what was MEASURED. Deriving one figure from the other needs a guess at the blessing bonus, and that guess is wrong for any mod whose bonus is not +1
+    private static string Describe(CartTypeRecord record) {
+        const string Head = "0 = Auto. ";
+        const string Tail = " 1 or more sets the exact capacity for this Cart type; the Mercury blessing adds nothing on top of it.";
+        bool hasUnblessed = record.ExactUnblessed > 0;
+        bool hasBlessed = record.ExactBlessed > 0;
+        if (hasUnblessed && hasBlessed) {
+            return Head + "This Cart type normally holds " + Count(record.ExactUnblessed) + " items, "
+                + Count(record.ExactBlessed) + " with the Mercury blessing." + Tail;
         }
-        if (record.ExactBlessed > 0) {
-            return Math.Max(1, record.ExactBlessed - SeedBonus);
+        if (hasUnblessed) {
+            return Head + "This Cart type normally holds " + Count(record.ExactUnblessed) + " items." + Tail;
         }
-        return 0;
-    }
-
-    private static int Bonus(CartTypeRecord record, bool blessed) {
-        if (!blessed) {
-            return 0;
+        if (hasBlessed) {
+            return Head + "This Cart type normally holds " + Count(record.ExactBlessed)
+                + " items with the Mercury blessing." + Tail;
         }
-        if (record.ExactUnblessed > 0 && record.ExactBlessed > record.ExactUnblessed) {
-            return record.ExactBlessed - record.ExactUnblessed;
-        }
-        return SeedBonus;
-    }
-
-    private static int Highest(CartTypeRecord record) {
-        int unblessed = Math.Max(record.ExactUnblessed, record.SeenUnblessed);
-        int blessed = Math.Max(record.ExactBlessed, record.SeenBlessed);
-        return Math.Max(unblessed, blessed);
+        return Head + "This Cart type's capacity has not been measured yet." + Tail;
     }
 
     private static string Serialize() {
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder(CacheVersion);
         foreach (CartTypeRecord record in Records.Values) {
-            if (builder.Length > 0) {
-                builder.Append(';');
-            }
-            builder.Append(record.Id.ToString()).Append('|')
+            builder.Append(';')
+                .Append(record.Id.ToString()).Append('|')
                 .Append(Sanitize(record.Name)).Append('|')
-                .Append(record.ExactUnblessed.ToString(CultureInfo.InvariantCulture)).Append('|')
-                .Append(record.ExactBlessed.ToString(CultureInfo.InvariantCulture)).Append('|')
-                .Append(record.SeenUnblessed.ToString(CultureInfo.InvariantCulture)).Append('|')
-                .Append(record.SeenBlessed.ToString(CultureInfo.InvariantCulture));
+                .Append(Count(record.ExactUnblessed)).Append('|')
+                .Append(Count(record.ExactBlessed));
         }
         return builder.ToString();
     }
@@ -325,6 +307,10 @@ internal static class CartCapacity {
             return string.Empty;
         }
         return name.Replace('|', ' ').Replace(';', ' ');
+    }
+
+    private static string Count(int value) {
+        return value.ToString(CultureInfo.InvariantCulture);
     }
 
     private static int ParseCount(string value) {
