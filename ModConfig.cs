@@ -55,7 +55,7 @@ internal static class ModConfig {
             new ConfigDescription("Releasing a pulled cart with the interact key never grabs a different cart on the same press.", null,
                 SectionTag("Cart Release Fix", 3), EntryTag("Enabled", 0)));
         CartCapacityEnabled = config.Bind("Cart Capacity", "Enabled", false,
-            new ConfigDescription("EXPERIMENTAL. Sets how many items each cart type can carry. A cart type only appears here after you load a world once, then restart the game. In multiplayer the host decides for everyone.", null,
+            new ConfigDescription("EXPERIMENTAL. Sets how many items each cart type can carry. A cart type only appears here after you load a world once, then restart the game. In multiplayer the host decides for everyone, and each player needs the mod to SEE the extra cargo. This is the only feature that stores anything in your save: set the cart types back to Auto and load each world once before uninstalling.", null,
                 SectionTag("Cart Capacity", 4), EntryTag("Enabled (Experimental)", 0)));
         KnownCarts = config.Bind("Cart Capacity", "Known Carts", "",
             new ConfigDescription("Internal list of the cart types the mod has seen. Not meant to be edited by hand.", null,

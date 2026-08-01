@@ -1,4 +1,4 @@
-﻿using CandideServer.Entities.Controllers;
+using CandideServer.Entities.Controllers;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Shared.Entity;
@@ -40,6 +40,9 @@ internal static class CartCapacityPatch {
             if (entity == null || entity.Removed || entity.CarrierId.HasValue) {
                 return;
             }
+            if (!CartCargo.CanTakeExtra(__instance)) {
+                return;
+            }
             if (CartCargo.GetOccupied(__instance) >= capacity) {
                 return;
             }
@@ -56,7 +59,7 @@ internal static class CartCapacityPatch {
             if (cartEntity == null || cartEntity.Removed) {
                 return;
             }
-            CartCapacity.Observe(cartEntity.BaseGuid, CartCapacity.Blessed, CartCargo.GetOccupied(cart));
+            CartCapacity.ObserveExact(cartEntity.BaseGuid, CartCapacity.Blessed, CartCargo.GetOccupied(cart));
         }
     }
 
