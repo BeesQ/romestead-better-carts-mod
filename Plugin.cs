@@ -14,10 +14,12 @@ public class BetterCartsPlugin : BasePlugin {
     public const string PluginVersion = "1.2.0";
 
     public override void Load() {
+        ModLog.Init(Log);
         ModConfig.Init(Config);
         MsmIntegration.Init(Log, Config);
         new Harmony(PluginGuid).PatchAll();
         Log.LogInfo(PluginName + " " + PluginVersion + " loaded.");
         Log.LogInfo("Cart Capacity: a cart type only gets its own setting after you load a world once, then restart the game.");
+        CartCapacity.LogStartup();
     }
 }

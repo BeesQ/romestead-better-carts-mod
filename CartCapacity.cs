@@ -13,6 +13,7 @@ using Shared.Data;
 using Shared.Entity;
 using Shared.Helpers;
 using Shared.Text;
+using System.Linq;
 
 namespace BetterCarts;
 
@@ -36,6 +37,7 @@ internal static class CartCapacity {
     internal const int VanillaBlessed = 5;
 
     private const string CacheVersion = "v2";
+    private const int DefaultBonus = 1;
     private const int SliderMax = 20;
     private const int DiscoveryRetryMs = 1000;
     private const string SectionName = "Cart Capacity";
@@ -44,6 +46,7 @@ internal static class CartCapacity {
     private static readonly Dictionary<Guid, CartTypeRecord> Records = new Dictionary<Guid, CartTypeRecord>();
 
     private static bool _discovered;
+    private static bool _seeding;
     private static bool _dirty;
     private static long _nextDiscoveryTick;
 
@@ -56,6 +59,34 @@ internal static class CartCapacity {
     }
 
     // the version token discards anything an older build wrote rather than reinterpreting it; misreading old lower bounds as exact numbers is what produced a wrong vanilla figure in the menu
+    internal static void LogStartup() {
+        ModLog.Info("=== STARTUP ===");
+        ModLog.Info("raw cache = \"" + ModConfig.KnownCarts.Value + "\"");
+        ModLog.Info("Enabled=" + ModConfig.Enabled.Value + " CartCapacityEnabled=" + ModConfig.CartCapacityEnabled.Value
+            + " records=" + Records.Count);
+        foreach (CartTypeRecord record in Records.Values) {
+            ModLog.Info("  record " + record.Id + " name=\"" + record.Name + "\" exactU=" + record.ExactUnblessed
+                + " exactB=" + record.ExactBlessed + " slider="
+                + (record.Setting == null ? "UNBOUND" : record.Setting.Value.ToString(CultureInfo.InvariantCulture)));
+        }
+        ModLog.Info("=== END STARTUP ===");
+    }
+
+    // dumps the raw flag collection, because 'the blessing does not work' is indistinguishable from 'the flag is spelled differently' without it
+    private static void LogWorldFlags(string origin) {
+        object flags = ServerGameState.WorldFlags;
+        string dump;
+        if (flags == null) {
+            dump = "null";
+        } else if (flags is System.Collections.IEnumerable items && !(flags is string)) {
+            dump = string.Join(",", items.Cast<object>().Select(o => o == null ? "null" : o.ToString()));
+        } else {
+            dump = flags.ToString();
+        }
+        ModLog.OnChange("flags:" + origin, "WorldFlags(" + origin + ") key=\"" + WorldFlagNames.MercuryCartCapacity
+            + "\" HasFlag=" + Blessed + " raw=[" + dump + "]");
+    }
+
     internal static void LoadCache(string raw) {
         Records.Clear();
         if (string.IsNullOrEmpty(raw)) {
@@ -97,7 +128,8 @@ internal static class CartCapacity {
         }
     }
 
-    internal static void EnsureDiscovered() {
+    // trustServerFlags is false on the CLIENT path: ServerGameState.WorldFlags is not populated there, so Blessed reads false and seeding would write the unblessed field in a blessed world
+    internal static void EnsureDiscovered(bool trustServerFlags) {
         if (_discovered) {
             return;
         }
@@ -106,10 +138,40 @@ internal static class CartCapacity {
             return;
         }
         _nextDiscoveryTick = now + DiscoveryRetryMs;
-        if (DiscoverServer() || DiscoverClient()) {
+        LogWorldFlags(trustServerFlags ? "server" : "client");
+        _seeding = trustServerFlags;
+        bool server = DiscoverServer();
+        bool found = server || DiscoverClient();
+        _seeding = false;
+        if (found) {
             _discovered = true;
+            ModLog.Info("DISCOVERY done via " + (server ? "SERVER" : "CLIENT") + " db, seeding="
+                + trustServerFlags + ", types=" + Records.Count);
+            foreach (CartTypeRecord record in Records.Values) {
+                ModLog.Info("  type " + record.Id + " name=\"" + record.Name + "\" exactU=" + record.ExactUnblessed
+                    + " exactB=" + record.ExactBlessed + " params=" + DumpTemplateParameters(record.Id));
+            }
             FlushCache();
+        } else {
+            ModLog.OnChange("discovery", "DISCOVERY waiting - no doodad database yet (trustServerFlags="
+                + trustServerFlags + ")");
         }
+    }
+
+    // if a modded Cart's marker parameter (Iron Cart uses iron_cart=1) is present on the DOODAD TEMPLATE, we can tell vanilla types from modded ones and stop seeding vanilla numbers into modded records
+    private static string DumpTemplateParameters(Guid id) {
+        EntityWrapper wrapper;
+        if (!ServerEntityDataManager.TryGetEntityBaseData(id, out wrapper)
+            && !DoodadDatabaseManager.TryGetEntityBaseData(id, out wrapper)) {
+            return "<no template>";
+        }
+        var controller = wrapper == null ? null : wrapper.Controller;
+        var parameters = controller == null ? null : controller.Parameters;
+        var dictionary = parameters == null ? null : parameters.Dictionary;
+        if (dictionary == null || dictionary.Count == 0) {
+            return "<none>";
+        }
+        return "{" + string.Join(", ", dictionary.Select(kv => kv.Key + "=" + kv.Value)) + "}";
     }
 
     internal static void NoteLiveType(Guid typeId) {
@@ -126,12 +188,14 @@ internal static class CartCapacity {
         CartTypeRecord record = Track(typeId);
         if (blessed) {
             if (count != record.ExactBlessed) {
+                ModLog.Info("MEASURED blessed " + record.Name + " " + record.ExactBlessed + " -> " + count);
                 record.ExactBlessed = count;
                 _dirty = true;
             }
             return;
         }
         if (count != record.ExactUnblessed) {
+            ModLog.Info("MEASURED unblessed " + record.Name + " " + record.ExactUnblessed + " -> " + count);
             record.ExactUnblessed = count;
             _dirty = true;
         }
@@ -155,6 +219,7 @@ internal static class CartCapacity {
         }
         _dirty = false;
         ModConfig.KnownCarts.Value = Serialize();
+        ModLog.OnChange("cache", "CACHE = " + ModConfig.KnownCarts.Value);
     }
 
     // 0 means "do not interfere": the master toggle, the feature toggle or the per-type value is off / Auto. A configured number is EXACT - the blessing adds nothing on top of it
@@ -165,7 +230,22 @@ internal static class CartCapacity {
         if (!Records.TryGetValue(cartEntity.BaseGuid, out CartTypeRecord record) || record.Setting == null) {
             return 0;
         }
-        return Math.Max(0, record.Setting.Value);
+        int configured = record.Setting.Value;
+        if (configured <= 0) {
+            return 0;
+        }
+        int bonus = Blessed ? Bonus(record) : 0;
+        ModLog.OnChange("cap:" + record.Id, "CAPACITY " + record.Name + " base=" + configured + " bonus=" + bonus
+            + " blessed=" + Blessed + " -> " + (configured + bonus));
+        return configured + bonus;
+    }
+
+    // the real bonus is only knowable from a measured PAIR, and in a blessed world the unblessed figure is never observable - so it is +1 until this Cart type is seen in both, which matches vanilla and understates a mod like Iron Cart (+2)
+    private static int Bonus(CartTypeRecord record) {
+        if (record.ExactUnblessed > 0 && record.ExactBlessed > record.ExactUnblessed) {
+            return record.ExactBlessed - record.ExactUnblessed;
+        }
+        return DefaultBonus;
     }
 
     // best available answer to "how much fits on this Cart", used by the free-slot rule even when the feature is off
@@ -231,7 +311,28 @@ internal static class CartCapacity {
                 _dirty = true;
             }
         }
+        Seed(record);
         return record;
+    }
+
+    // vanilla capacity is NOT something to discover: PickupEntity is a hardcoded chain of five TryPickupEntity calls with the fifth gated on the blessing, so it is 4, or 5 blessed. Seeded ONLY for the world state we are actually in, and ONLY from the server path - a refusal overwrites it for any mod that carries more
+    private static void Seed(CartTypeRecord record) {
+        if (!_seeding) {
+            return;
+        }
+        if (Blessed) {
+            if (record.ExactBlessed <= 0) {
+                record.ExactBlessed = VanillaBlessed;
+                _dirty = true;
+                ModLog.Info("SEED blessed " + record.Name + " = " + VanillaBlessed + " (vanilla assumption)");
+            }
+            return;
+        }
+        if (record.ExactUnblessed <= 0) {
+            record.ExactUnblessed = VanillaBase;
+            _dirty = true;
+            ModLog.Info("SEED unblessed " + record.Name + " = " + VanillaBase + " (vanilla assumption)");
+        }
     }
 
     // several constructions can point at ONE doodad Guid, so a name is only trustworthy when exactly one matches
@@ -270,24 +371,23 @@ internal static class CartCapacity {
         return (string.IsNullOrEmpty(record.Name) ? UnknownName : record.Name) + " Capacity";
     }
 
-    // states only what was MEASURED. Deriving one figure from the other needs a guess at the blessing bonus, and that guess is wrong for any mod whose bonus is not +1
+    // states only what was MEASURED, in ONE line. Deriving one figure from the other needs a guess at the blessing bonus, and that guess is wrong for any mod whose bonus is not +1. The rule that applies to every entry lives once, on the section toggle
     private static string Describe(CartTypeRecord record) {
         const string Head = "0 = Auto. ";
-        const string Tail = " 1 or more sets the exact capacity for this Cart type; the Mercury blessing adds nothing on top of it.";
         bool hasUnblessed = record.ExactUnblessed > 0;
         bool hasBlessed = record.ExactBlessed > 0;
         if (hasUnblessed && hasBlessed) {
             return Head + "This Cart type normally holds " + Count(record.ExactUnblessed) + " items, "
-                + Count(record.ExactBlessed) + " with the Mercury blessing." + Tail;
+                + Count(record.ExactBlessed) + " with the Mercury blessing.";
         }
         if (hasUnblessed) {
-            return Head + "This Cart type normally holds " + Count(record.ExactUnblessed) + " items." + Tail;
+            return Head + "This Cart type normally holds " + Count(record.ExactUnblessed) + " items.";
         }
         if (hasBlessed) {
             return Head + "This Cart type normally holds " + Count(record.ExactBlessed)
-                + " items with the Mercury blessing." + Tail;
+                + " items with the Mercury blessing.";
         }
-        return Head + "This Cart type's capacity has not been measured yet." + Tail;
+        return Head + "Not measured yet - this Cart type fills once, then your number applies.";
     }
 
     private static string Serialize() {
