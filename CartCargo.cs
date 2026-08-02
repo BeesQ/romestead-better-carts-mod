@@ -52,7 +52,8 @@ internal static class CartCargo {
             return state.Occupied;
         }
         CollectCarried(cart, ReuseCount);
-        state.Occupied = ReuseCount.Count;
+        // a just-pinned item is not in the collision index until its position is written, so the rect query can under-report for a tick. Slot parameters plus our own extras is a floor that is never stale - without it two EXTENDs in one tick both saw the same count and pushed a Cart past its capacity, and a refusal sampled mid-fill recorded a capacity one too low
+        state.Occupied = Math.Max(ReuseCount.Count, SlottedCount(cart) + state.Extras.Count);
         state.OccupiedStamp = now;
         return state.Occupied;
     }
@@ -67,6 +68,32 @@ internal static class CartCargo {
 
     internal static bool Adopted(ServerCart2Controller cart) {
         return States.GetOrCreateValue(cart).Adopted;
+    }
+
+    // how many slot parameters name CARGO right now, including another mod's. Compared against the carrier count, this detects the tick where a Cart's bookkeeping and its real cargo disagree
+    // a Cart's parameters hold several Guids that are NOT cargo - owner_character_id, following, wheels_guid - so counting every Guid-shaped value inflated this by one or two and made Carts refuse early. Carriable is the same property CanBePickedUp uses and the same one CollectCarried filters on, so both halves now measure the same thing without knowing any mod's key names
+    internal static int SlottedCount(ServerCart2Controller cart) {
+        EntityWrapper cartEntity = cart.Entity;
+        var parameters = cart.Parameters;
+        var dictionary = parameters == null ? null : parameters.Dictionary;
+        if (cartEntity == null || dictionary == null) {
+            return 0;
+        }
+        int count = 0;
+        foreach (var pair in dictionary) {
+            if (string.Equals(pair.Key, CartCargoSync.CargoKey, StringComparison.Ordinal)) {
+                continue;
+            }
+            if (pair.Value == null || pair.Value.Length != 36 || !Guid.TryParse(pair.Value, out Guid id)
+                || id == Guid.Empty) {
+                continue;
+            }
+            EntityWrapper item = cartEntity.System.GetEntityById(id);
+            if (item != null && !item.Removed && item.Carriable) {
+                count++;
+            }
+        }
+        return count;
     }
 
     internal static bool CanTakeExtra(ServerCart2Controller cart) {
@@ -237,6 +264,7 @@ internal static class CartCargo {
         StringBuilder builder = new StringBuilder();
         builder.Append("SWEEP cart=").Append(cartEntity.Id).Append(" type=").Append(cartEntity.BaseGuid)
             .Append(" carried=").Append(ReuseSweep.Count)
+            .Append(" slotted=").Append(SlottedCount(cart))
             .Append(" cap=").Append(CartCapacity.GetEnforcedCapacity(cartEntity))
             .Append(" blessed=").Append(CartCapacity.Blessed);
         builder.Append(" | fields c1=").Append(Short(cart.Carried1)).Append(" c2=").Append(Short(cart.Carried2))

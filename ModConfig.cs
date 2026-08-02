@@ -58,9 +58,9 @@ internal static class ModConfig {
         CartCapacityEnabled = config.Bind("Cart Capacity", "Enabled", false,
             new ConfigDescription("EXPERIMENTAL. Sets how many items each cart type can carry. Below, 0 = Auto and 1 or more sets the BASE capacity - the Mercury blessing adds 1 on top, or that cart type's real bonus once it has been seen both with and without the blessing. A cart type only appears here after you load a world once, then restart the game. In multiplayer the host decides for everyone, and each player needs the mod to SEE the extra cargo. This is the only feature that stores anything in your save: set the cart types back to Auto and load each world once before uninstalling.", null,
                 SectionTag("Cart Capacity", 4), EntryTag("Enabled (Experimental)", 0)));
-        CartCapacityLogging = config.Bind("Cart Capacity", "Logging", true,
-            new ConfigDescription("DIAGNOSTIC. Writes detailed Cart Capacity data to BepInEx/LogOutput.log. Turn off once you are done reporting.", null,
-                EntryTag("Logging (Diagnostic)", 1)));
+        CartCapacityLogging = config.Bind("Cart Capacity", "Logging", false,
+            new ConfigDescription("DIAGNOSTIC. Writes detailed Cart Capacity data to BepInEx/LogOutput.log. Off by default; turn it on in this file only when reporting a bug.", null,
+                EntryTag("Logging (Diagnostic)", 98, hidden: true)));
         KnownCarts = config.Bind("Cart Capacity", "Known Carts", "",
             new ConfigDescription("Internal list of the cart types the mod has seen. Not meant to be edited by hand.", null,
                 EntryTag("Known Carts", 99, hidden: true)));
