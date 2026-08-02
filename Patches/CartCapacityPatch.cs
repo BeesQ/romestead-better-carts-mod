@@ -64,6 +64,13 @@ internal static class CartCapacityPatch {
                 return;
             }
             int occupied = CartCargo.GetOccupied(cart);
+            int slotted = CartCargo.SlottedCount(cart);
+            // a slot can name an item that is no longer carried for a tick or two. Sampling THAT tick is what once recorded an 8-slot Iron Cart as holding 7, and ObserveExact assigns, so one bad sample overwrote a good one
+            if (occupied != slotted) {
+                ModLog.OnChange("refuse:" + cartEntity.Id, "REFUSAL cart=" + cartEntity.Id + " occupied=" + occupied
+                    + " slotted=" + slotted + " - INCONSISTENT, not recorded");
+                return;
+            }
             ModLog.OnChange("refuse:" + cartEntity.Id, "REFUSAL cart=" + cartEntity.Id + " occupied=" + occupied
                 + " blessed=" + CartCapacity.Blessed + " -> exact for type " + cartEntity.BaseGuid);
             CartCapacity.ObserveExact(cartEntity.BaseGuid, CartCapacity.Blessed, occupied);

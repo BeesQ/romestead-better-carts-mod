@@ -21,6 +21,8 @@ internal static class CartCargoClient {
         new ConditionalWeakTable<Cart2Controller, List<Guid>>();
 
     private static readonly List<Guid> ReuseIncoming = new List<Guid>();
+    private static readonly ConditionalWeakTable<Cart2Controller, string[]> LastRaw =
+        new ConditionalWeakTable<Cart2Controller, string[]>();
 
     // Cart2Controller.OnServerSetState re-reads c1..c5 after every parameter sync; bc_cargo rides the same message
     internal static void SyncSlots(Cart2Controller cart) {
@@ -30,8 +32,12 @@ internal static class CartCargoClient {
             return;
         }
         string stored = parameters.GetString(CartCargoSync.CargoKey, string.Empty);
-        ModLog.OnChange("client:" + cart.Entity.Id, "CLIENT SYNC cart=" + cart.Entity.Id + " bc_cargo=\"" + stored
-            + "\" had=" + slots.Count);
+        string[] previous = LastRaw.GetValue(cart, _ => new string[1]);
+        if (string.Equals(previous[0], stored, StringComparison.Ordinal)) {
+            return;
+        }
+        previous[0] = stored;
+        ModLog.Info("CLIENT SYNC cart=" + cart.Entity.Id + " bc_cargo=\"" + stored + "\" had=" + slots.Count);
         CartCargoSync.Unpack(stored, ReuseIncoming);
         foreach (Guid id in slots) {
             if (!ReuseIncoming.Contains(id)) {
@@ -45,6 +51,8 @@ internal static class CartCargoClient {
     }
 
     internal static void UpdateSlots(Cart2Controller cart) {
+        // OnServerSetState is a NETWORK callback - on a listen server the host never receives it, so the client half was dead in single player. Polling the parameter each tick is the only sync point that works on both
+        SyncSlots(cart);
         List<Guid> slots = Slots.GetOrCreateValue(cart);
         if (slots.Count == 0) {
             return;

@@ -46,7 +46,6 @@ internal static class CartCapacity {
     private static readonly Dictionary<Guid, CartTypeRecord> Records = new Dictionary<Guid, CartTypeRecord>();
 
     private static bool _discovered;
-    private static bool _seeding;
     private static bool _dirty;
     private static long _nextDiscoveryTick;
 
@@ -139,14 +138,11 @@ internal static class CartCapacity {
         }
         _nextDiscoveryTick = now + DiscoveryRetryMs;
         LogWorldFlags(trustServerFlags ? "server" : "client");
-        _seeding = trustServerFlags;
         bool server = DiscoverServer();
         bool found = server || DiscoverClient();
-        _seeding = false;
         if (found) {
             _discovered = true;
-            ModLog.Info("DISCOVERY done via " + (server ? "SERVER" : "CLIENT") + " db, seeding="
-                + trustServerFlags + ", types=" + Records.Count);
+            ModLog.Info("DISCOVERY done via " + (server ? "SERVER" : "CLIENT") + " db, types=" + Records.Count);
             foreach (CartTypeRecord record in Records.Values) {
                 ModLog.Info("  type " + record.Id + " name=\"" + record.Name + "\" exactU=" + record.ExactUnblessed
                     + " exactB=" + record.ExactBlessed + " params=" + DumpTemplateParameters(record.Id));
@@ -311,28 +307,7 @@ internal static class CartCapacity {
                 _dirty = true;
             }
         }
-        Seed(record);
         return record;
-    }
-
-    // vanilla capacity is NOT something to discover: PickupEntity is a hardcoded chain of five TryPickupEntity calls with the fifth gated on the blessing, so it is 4, or 5 blessed. Seeded ONLY for the world state we are actually in, and ONLY from the server path - a refusal overwrites it for any mod that carries more
-    private static void Seed(CartTypeRecord record) {
-        if (!_seeding) {
-            return;
-        }
-        if (Blessed) {
-            if (record.ExactBlessed <= 0) {
-                record.ExactBlessed = VanillaBlessed;
-                _dirty = true;
-                ModLog.Info("SEED blessed " + record.Name + " = " + VanillaBlessed + " (vanilla assumption)");
-            }
-            return;
-        }
-        if (record.ExactUnblessed <= 0) {
-            record.ExactUnblessed = VanillaBase;
-            _dirty = true;
-            ModLog.Info("SEED unblessed " + record.Name + " = " + VanillaBase + " (vanilla assumption)");
-        }
     }
 
     // several constructions can point at ONE doodad Guid, so a name is only trustworthy when exactly one matches
