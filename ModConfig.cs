@@ -15,6 +15,7 @@ internal static class ModConfig {
     internal static ConfigEntry<bool> CartReleaseFixEnabled;
     internal static ConfigEntry<bool> CartCapacityEnabled;
     internal static ConfigEntry<bool> CartCapacityLogging;
+    internal static ConfigEntry<bool> CartCapacityAdvancedLogging;
     internal static ConfigEntry<string> KnownCarts;
     internal static ConfigEntry<bool> StockpileRangeEnabled;
     internal static ConfigEntry<int> StockpileRange;
@@ -56,11 +57,14 @@ internal static class ModConfig {
             new ConfigDescription("Releasing a pulled cart with the interact key never grabs a different cart on the same press.", null,
                 SectionTag("Cart Release Fix", 3), EntryTag("Enabled", 0)));
         CartCapacityEnabled = config.Bind("Cart Capacity", "Enabled", false,
-            new ConfigDescription("EXPERIMENTAL. Sets how many items each cart type can carry. Below, 0 = Auto and 1 or more sets the BASE capacity - the Mercury blessing adds 1 on top, or that cart type's real bonus once it has been seen both with and without the blessing. A cart type only appears here after you load a world once, then restart the game. In multiplayer the host decides for everyone, and each player needs the mod to SEE the extra cargo. This is the only feature that stores anything in your save: set the cart types back to Auto and load each world once before uninstalling.", null,
+            new ConfigDescription("EXPERIMENTAL. Sets how many items each cart type can carry. Below, 0 = Default and 1 or more sets the BASE capacity - the Mercury blessing adds a bonus on top. Lowering a value never takes cargo off a cart: a cart that is already over the new limit keeps what it carries and only stops picking up more, until you unload it by hand. A cart type only appears here after you load a world once, then restart the game. In multiplayer the host decides for everyone, and each player needs the mod to SEE the extra cargo. This is the only feature that stores anything in your save: set the cart types back to Default and load each world once before uninstalling.", null,
                 SectionTag("Cart Capacity", 4), EntryTag("Enabled (Experimental)", 0)));
         CartCapacityLogging = config.Bind("Cart Capacity", "Logging", false,
-            new ConfigDescription("DIAGNOSTIC. Writes detailed Cart Capacity data to BepInEx/LogOutput.log. Off by default; turn it on in this file only when reporting a bug.", null,
-                EntryTag("Logging (Diagnostic)", 98, hidden: true)));
+            new ConfigDescription("DIAGNOSTIC. Writes the Cart Capacity startup, discovery and cache lines to BepInEx/LogOutput.log. Off by default; turn it on in this file only when reporting a bug.", null,
+                EntryTag("Logging (Diagnostic)", 97, hidden: true)));
+        CartCapacityAdvancedLogging = config.Bind("Cart Capacity", "Advanced Logging", false,
+            new ConfigDescription("DIAGNOSTIC. Adds a per-cart and per-pickup trace to the log, which makes it very large. Does nothing while Logging is off.", null,
+                EntryTag("Advanced Logging (Diagnostic)", 98, hidden: true)));
         KnownCarts = config.Bind("Cart Capacity", "Known Carts", "",
             new ConfigDescription("Internal list of the cart types the mod has seen. Not meant to be edited by hand.", null,
                 EntryTag("Known Carts", 99, hidden: true)));

@@ -18,7 +18,7 @@ internal static class CartCapacityPatch {
             }
             __state = true;
             __result = false;
-            ModLog.OnChange("block:" + __instance.Entity.Id,
+            ModLog.AdvancedOnChange("block:" + __instance.Entity.Id,
                 "BLOCK cart=" + __instance.Entity.Id + " occupied=" + CartCargo.GetOccupied(__instance)
                 + " >= cap=" + capacity);
             return false;
@@ -34,7 +34,6 @@ internal static class CartCapacityPatch {
             if (__state) {
                 return;
             }
-            Learn(__instance);
             int capacity = CartCapacity.GetEnforcedCapacity(__instance.Entity);
             if (capacity <= 0) {
                 return;
@@ -48,32 +47,10 @@ internal static class CartCapacityPatch {
             if (CartCargo.GetOccupied(__instance) >= capacity) {
                 return;
             }
-            ModLog.Info("EXTEND cart=" + __instance.Entity.Id + " taking " + entity.Id + " (cap=" + capacity
+            ModLog.Advanced("EXTEND cart=" + __instance.Entity.Id + " taking " + entity.Id + " (cap=" + capacity
                 + " occupied=" + CartCargo.GetOccupied(__instance) + ")");
             CartCargo.PinExtra(__instance, entity);
             __result = true;
-        }
-
-        // a refusal means every slot this Cart knows about is taken, so the current count IS its capacity - but only while the mod holds nothing extra on it
-        private static void Learn(ServerCart2Controller cart) {
-            if (CartCargo.HasExtras(cart) || !CartCargo.Adopted(cart)) {
-                return;
-            }
-            EntityWrapper cartEntity = cart.Entity;
-            if (cartEntity == null || cartEntity.Removed) {
-                return;
-            }
-            int occupied = CartCargo.GetOccupied(cart);
-            int slotted = CartCargo.SlottedCount(cart);
-            // a slot can name an item that is no longer carried for a tick or two. Sampling THAT tick is what once recorded an 8-slot Iron Cart as holding 7, and ObserveExact assigns, so one bad sample overwrote a good one
-            if (occupied != slotted) {
-                ModLog.OnChange("refuse:" + cartEntity.Id, "REFUSAL cart=" + cartEntity.Id + " occupied=" + occupied
-                    + " slotted=" + slotted + " - INCONSISTENT, not recorded");
-                return;
-            }
-            ModLog.OnChange("refuse:" + cartEntity.Id, "REFUSAL cart=" + cartEntity.Id + " occupied=" + occupied
-                + " blessed=" + CartCapacity.Blessed + " -> exact for type " + cartEntity.BaseGuid);
-            CartCapacity.ObserveExact(cartEntity.BaseGuid, CartCapacity.Blessed, occupied);
         }
     }
 

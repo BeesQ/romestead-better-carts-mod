@@ -35,6 +35,7 @@ internal static class CartCargo {
     private static readonly List<EntityWrapper> ReuseUnslotted = new List<EntityWrapper>();
     private static readonly List<Guid> ReuseOrder = new List<Guid>();
     private static readonly List<Guid> ReuseAdopt = new List<Guid>();
+    private static readonly HashSet<Guid> ReuseSlotted = new HashSet<Guid>();
 
     internal static bool HasFreeSlot(ServerCart2Controller cart) {
         EntityWrapper cartEntity = cart.Entity;
@@ -62,24 +63,17 @@ internal static class CartCargo {
         States.GetOrCreateValue(cart).OccupiedStamp = -1;
     }
 
-    internal static bool HasExtras(ServerCart2Controller cart) {
-        return States.GetOrCreateValue(cart).Extras.Count > 0;
-    }
-
-    internal static bool Adopted(ServerCart2Controller cart) {
-        return States.GetOrCreateValue(cart).Adopted;
-    }
-
-    // how many slot parameters name CARGO right now, including another mod's. Compared against the carrier count, this detects the tick where a Cart's bookkeeping and its real cargo disagree
+    // how many slot parameters name CARGO right now, including another mod's
     // a Cart's parameters hold several Guids that are NOT cargo - owner_character_id, following, wheels_guid - so counting every Guid-shaped value inflated this by one or two and made Carts refuse early. Carriable is the same property CanBePickedUp uses and the same one CollectCarried filters on, so both halves now measure the same thing without knowing any mod's key names
-    internal static int SlottedCount(ServerCart2Controller cart) {
+    // DISTINCT ids, not entries: a vanilla Cart in the wild carries the same two items across five slot keys, and counting entries made it read as full at 5 while holding 2
+    private static int SlottedCount(ServerCart2Controller cart) {
         EntityWrapper cartEntity = cart.Entity;
         var parameters = cart.Parameters;
         var dictionary = parameters == null ? null : parameters.Dictionary;
         if (cartEntity == null || dictionary == null) {
             return 0;
         }
-        int count = 0;
+        ReuseSlotted.Clear();
         foreach (var pair in dictionary) {
             if (string.Equals(pair.Key, CartCargoSync.CargoKey, StringComparison.Ordinal)) {
                 continue;
@@ -90,10 +84,10 @@ internal static class CartCargo {
             }
             EntityWrapper item = cartEntity.System.GetEntityById(id);
             if (item != null && !item.Removed && item.Carriable) {
-                count++;
+                ReuseSlotted.Add(id);
             }
         }
-        return count;
+        return ReuseSlotted.Count;
     }
 
     internal static bool CanTakeExtra(ServerCart2Controller cart) {
@@ -109,7 +103,7 @@ internal static class CartCargo {
         Pin(cartEntity, item);
         if (!state.Extras.Contains(item.Id)) {
             state.Extras.Add(item.Id);
-            ModLog.Info("PIN extra " + Short(item.Id) + " on cart " + Short(cartEntity.Id)
+            ModLog.Advanced("PIN extra " + Short(item.Id) + " on cart " + Short(cartEntity.Id)
                 + " (extras=" + state.Extras.Count + ")");
         }
         state.OccupiedStamp = -1;
@@ -158,7 +152,7 @@ internal static class CartCargo {
         }
         string stored = parameters.GetString(CartCargoSync.CargoKey, string.Empty);
         if (!string.IsNullOrEmpty(stored)) {
-            ModLog.Info("ADOPT cart=" + Short(cart.Entity.Id) + " bc_cargo=\"" + stored + "\"");
+            ModLog.Advanced("ADOPT cart=" + Short(cart.Entity.Id) + " bc_cargo=\"" + stored + "\"");
         }
         CartCargoSync.Unpack(stored, ReuseAdopt);
         state.Extras.Clear();
@@ -187,7 +181,7 @@ internal static class CartCargo {
             }
             // the player grabbed it off the Cart; vanilla's UpdateCarriedItem performs exactly this reset, and without it the item stays collisionless and no Cart can pick it up again
             if (item.CarrierId.HasValue && item.CarrierId != cartEntity.Id) {
-                ModLog.Info("UNPIN extra " + Short(item.Id) + " - carrier changed to " + Short(item.CarrierId.Value));
+                ModLog.Advanced("UNPIN extra " + Short(item.Id) + " - carrier changed to " + Short(item.CarrierId.Value));
                 item.NoEntityCollision = false;
                 item.NoTerrainCollision = false;
                 state.Extras.RemoveAt(i);
@@ -234,29 +228,22 @@ internal static class CartCargo {
             }
             EntityWrapper item = Find(ReuseUnslotted, ReuseOrder[i]);
             if (item != null) {
-                ModLog.Info("RELEASE unslotted " + Short(item.Id) + " from cart " + Short(cartEntity.Id)
+                ModLog.Advanced("RELEASE unslotted " + Short(item.Id) + " from cart " + Short(cartEntity.Id)
                     + " (cap=" + capacity + " keep=" + keep + " slotted=" + slotted + ")");
                 Release(cartEntity, item);
             }
         }
 
-        if (capacity > 0) {
-            DropSlotted(cart, cartEntity, slotted + keep - capacity);
-        }
-
         state.OccupiedStamp = -1;
         Publish(cartEntity, state);
 
-        if (ReuseUnslotted.Count == 0) {
-            CartCapacity.ObserveSeen(cartEntity.BaseGuid, CartCapacity.Blessed, ReuseSweep.Count);
-        }
         CartCapacity.NoteLiveType(cartEntity.BaseGuid);
         CartCapacity.FlushCache();
     }
 
     // the whole picture for one Cart in one line block: what it carries, which of those the parameters claim, and every parameter it has. This is what identifies cargo held by a mod whose slot keys we cannot see
     private static void DumpSweep(ServerCart2Controller cart, EntityWrapper cartEntity) {
-        if (!ModLog.Enabled) {
+        if (!ModLog.AdvancedEnabled) {
             return;
         }
         var parameters = cart.Parameters;
@@ -283,7 +270,7 @@ internal static class CartCargo {
                     .Append(pair.Value.Length == 36 ? Short(pair.Value) : pair.Value);
             }
         }
-        ModLog.OnChange("sweep:" + cartEntity.Id, builder.ToString());
+        ModLog.AdvancedOnChange("sweep:" + cartEntity.Id, builder.ToString());
     }
 
     private static string MatchedKey(IDictionary<string, string> dictionary, Guid itemId) {
@@ -321,35 +308,9 @@ internal static class CartCargo {
             return;
         }
         state.Written = packed;
-        ModLog.Info("PUBLISH cart=" + Short(cartEntity.Id) + " bc_cargo=\"" + packed + "\"");
+        ModLog.Advanced("PUBLISH cart=" + Short(cartEntity.Id) + " bc_cargo=\"" + packed + "\"");
         ServerEntitySystemManager.UpdateEntityParameter(cartEntity, CartCargoSync.CargoKey, packed,
             SyncStrategy.Everyone());
-    }
-
-    // clearing CarrierId is not enough for a vanilla slot: UpdateCarriedItem re-claims any item whose CarrierId is null, so the slot field and its parameter have to go too
-    private static void DropSlotted(ServerCart2Controller cart, EntityWrapper cartEntity, int surplus) {
-        if (surplus <= 0) {
-            return;
-        }
-        surplus = DropSlot(cartEntity, ref cart.Carried5, ServerCart2Controller.Carried5IdKey, surplus);
-        surplus = DropSlot(cartEntity, ref cart.Carried4, ServerCart2Controller.Carried4IdKey, surplus);
-        surplus = DropSlot(cartEntity, ref cart.Carried3, ServerCart2Controller.Carried3IdKey, surplus);
-        surplus = DropSlot(cartEntity, ref cart.Carried2, ServerCart2Controller.Carried2IdKey, surplus);
-        DropSlot(cartEntity, ref cart.Carried1, ServerCart2Controller.Carried1IdKey, surplus);
-    }
-
-    private static int DropSlot(EntityWrapper cartEntity, ref Guid? slot, string key, int surplus) {
-        if (surplus <= 0 || !slot.HasValue) {
-            return surplus;
-        }
-        EntityWrapper item = cartEntity.System.GetEntityById(slot.Value);
-        ModLog.Info("DROP slot " + key + " item=" + Short(slot.Value) + " from cart " + Short(cartEntity.Id));
-        slot = null;
-        ServerEntitySystemManager.UpdateEntityParameter(cartEntity, key, string.Empty, SyncStrategy.Everyone());
-        if (item != null && !item.Removed) {
-            Release(cartEntity, item);
-        }
-        return surplus - 1;
     }
 
     // keeps items on the seat they already had, so a rebuild every 100 ms does not shuffle the cargo around
