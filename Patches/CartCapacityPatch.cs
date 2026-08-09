@@ -68,11 +68,10 @@ internal static class CartCapacityPatch {
         }
     }
 
-    // discovery needs a loaded doodad database, and a Cart existing proves there is one. Hanging it off EntityInitialize costs one guarded bool per Cart spawn instead of one per controller per tick
     [HarmonyPatch(typeof(ServerCart2Controller), nameof(ServerCart2Controller.EntityInitialize))]
-    private static class Discovery {
+    private static class Flags {
         private static void Postfix() {
-            CartCapacity.EnsureDiscovered(true);
+            CartCapacity.NoteWorldLoaded("server");
         }
     }
 }

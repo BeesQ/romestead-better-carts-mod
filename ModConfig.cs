@@ -15,8 +15,8 @@ internal static class ModConfig {
     internal static ConfigEntry<bool> CartReleaseFixEnabled;
     internal static ConfigEntry<bool> CartCapacityEnabled;
     internal static ConfigEntry<bool> CartCapacityLogging;
+    internal static ConfigEntry<int> CartCapacityBlessingBonus;
     internal static ConfigEntry<bool> CartCapacityAdvancedLogging;
-    internal static ConfigEntry<string> KnownCarts;
     internal static ConfigEntry<bool> StockpileRangeEnabled;
     internal static ConfigEntry<int> StockpileRange;
     internal static ConfigEntry<bool> StockpileWhilePulled;
@@ -56,19 +56,18 @@ internal static class ModConfig {
         CartReleaseFixEnabled = config.Bind("Cart Release Fix", "Enabled", true,
             new ConfigDescription("Releasing a pulled cart with the interact key never grabs a different cart on the same press.", null,
                 SectionTag("Cart Release Fix", 3), EntryTag("Enabled", 0)));
-        CartCapacityEnabled = config.Bind("Cart Capacity", "Enabled", false,
-            new ConfigDescription("EXPERIMENTAL. Sets how many items each cart type can carry. Below, 0 = Default and 1 or more sets the BASE capacity - the Mercury blessing adds a bonus on top. Lowering a value never takes cargo off a cart: a cart that is already over the new limit keeps what it carries and only stops picking up more, until you unload it by hand. A cart type only appears here after you load a world once, then restart the game. In multiplayer the host decides for everyone, and each player needs the mod to SEE the extra cargo. This is the only feature that stores anything in your save: set the cart types back to Default and load each world once before uninstalling.", null,
+        CartCapacityEnabled = config.Bind("Cart Capacity", "Enabled", true,
+            new ConfigDescription("EXPERIMENTAL. Sets how many items the Wooden and Bronze Carts can carry. Every entry below starts at 0 = Default, which leaves that cart exactly as the game made it: 4 items, or 5 with the Mercury blessing. Any other value replaces that base of 4, and the Mercury blessing then adds the bonus set below. Lowering a value never takes cargo off a cart: a cart that is already over the new limit keeps what it carries and only stops picking up more, until you unload it by hand. Modded cart types are not listed here, because a cart mod can replace the pickup logic entirely and this feature cannot hold a limit on one. In multiplayer the host decides for everyone, and each player needs the mod to SEE the extra cargo. It writes to your save only if you raise a cart above its normal capacity: set those cart types back to Default and load each world once before uninstalling.", null,
                 SectionTag("Cart Capacity", 4), EntryTag("Enabled (Experimental)", 0)));
+        CartCapacityBlessingBonus = config.Bind("Cart Capacity", "Blessing Bonus", 1,
+            new ConfigDescription("How much the Mercury cart-capacity blessing adds on top of a cart's base capacity. Only applies to a cart whose value below is 1 or more; a cart left at Default keeps the game's normal +1.", new AcceptableValueRange<int>(0, 10),
+                EntryTag("Blessing Bonus", 1, hidden: !CartCapacityEnabled.Value)));
         CartCapacityLogging = config.Bind("Cart Capacity", "Logging", false,
-            new ConfigDescription("DIAGNOSTIC. Writes the Cart Capacity startup, discovery and cache lines to BepInEx/LogOutput.log. Off by default; turn it on in this file only when reporting a bug.", null,
+            new ConfigDescription("DIAGNOSTIC. Writes the Cart Capacity startup and world lines to BepInEx/LogOutput.log. Off by default; turn it on in this file only when reporting a bug.", null,
                 EntryTag("Logging (Diagnostic)", 97, hidden: true)));
         CartCapacityAdvancedLogging = config.Bind("Cart Capacity", "Advanced Logging", false,
             new ConfigDescription("DIAGNOSTIC. Adds a per-cart and per-pickup trace to the log, which makes it very large. Does nothing while Logging is off.", null,
                 EntryTag("Advanced Logging (Diagnostic)", 98, hidden: true)));
-        KnownCarts = config.Bind("Cart Capacity", "Known Carts", "",
-            new ConfigDescription("Internal list of the cart types the mod has seen. Not meant to be edited by hand.", null,
-                EntryTag("Known Carts", 99, hidden: true)));
-        CartCapacity.LoadCache(KnownCarts.Value);
         CartCapacity.BindTypeEntries(config);
         StockpileRangeEnabled = config.Bind("Stockpile Range", "Enabled", true,
             new ConfigDescription("Carts take resources from building output stockpiles within range. Solid resources go into free slots, bucket resources fill empty buckets on the cart.", null,

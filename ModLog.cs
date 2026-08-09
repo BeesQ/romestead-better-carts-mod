@@ -3,7 +3,6 @@ using BepInEx.Logging;
 
 namespace BetterCarts;
 
-// diagnostic layer for Cart Capacity. It stays in the codebase on purpose - it is what found the client-callback and the measurement-race bugs. Both toggles ship false
 internal static class ModLog {
     private const string Tag = "[CC] ";
 
@@ -18,7 +17,6 @@ internal static class ModLog {
         get { return _log != null && ModConfig.CartCapacityLogging != null && ModConfig.CartCapacityLogging.Value; }
     }
 
-    // the per-Cart and per-pickup firehose. Gated on Enabled too, so the basic toggle still silences everything on its own
     internal static bool AdvancedEnabled {
         get {
             return Enabled && ModConfig.CartCapacityAdvancedLogging != null
