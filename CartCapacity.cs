@@ -1,19 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
+using System.Linq;
 using BepInEx.Configuration;
-using Candide.Database.Doodad;
-using Candide.Entities.Controllers.Other;
 using CandideServer;
-using CandideServer.Entities;
-using CandideServer.Entities.Controllers;
 using Shared;
-using Shared.Data;
 using Shared.Entity;
 using Shared.Helpers;
-using Shared.Text;
-using System.Linq;
 
 namespace BetterCarts;
 
@@ -28,19 +21,18 @@ internal static class CartCapacity {
     internal const int VanillaBase = 4;
     internal const int VanillaBlessed = 5;
 
-    private const string CacheVersion = "v3";
-    private const int DefaultBonus = 1;
     private const int SliderMax = 20;
-    private const int DiscoveryRetryMs = 1000;
     private const string SectionName = "Cart Capacity";
-    private const string UnknownName = "Modded Cart";
-    private const string EntryDescription = "0 = Default. Sets the base number of items this cart type carries.";
+    private const string EntryDescription = "0 = Default, which leaves this cart at its normal capacity of 4 (5 with the Mercury blessing). Any other value replaces that base of 4.";
+
+    private static readonly CartTypeRecord[] Types = {
+        new CartTypeRecord { Id = new Guid("5af0ea10-21de-404a-a869-b0079653ee0b"), Name = "Wooden Cart" },
+        new CartTypeRecord { Id = new Guid("4f26d74b-6fea-4ce9-b369-3bd4507dfff6"), Name = "Bronze Cart" }
+    };
 
     private static readonly Dictionary<Guid, CartTypeRecord> Records = new Dictionary<Guid, CartTypeRecord>();
 
-    private static bool _discovered;
-    private static bool _dirty;
-    private static long _nextDiscoveryTick;
+    private static bool _flagsLogged;
 
     internal static bool Enforcing {
         get { return ModConfig.Enabled.Value && ModConfig.CartCapacityEnabled.Value; }
@@ -50,20 +42,44 @@ internal static class CartCapacity {
         get { return WorldFlagsHelper.HasFlag(ServerGameState.WorldFlags, WorldFlagNames.MercuryCartCapacity); }
     }
 
-    // the version token discards anything an older build wrote rather than reinterpreting it; misreading old lower bounds as exact numbers is what produced a wrong vanilla figure in the menu
+    private static int BlessingBonus {
+        get {
+            return ModConfig.CartCapacityBlessingBonus == null ? 1 : ModConfig.CartCapacityBlessingBonus.Value;
+        }
+    }
+
+    internal static void BindTypeEntries(ConfigFile config) {
+        bool hidden = !ModConfig.CartCapacityEnabled.Value;
+        Records.Clear();
+        int order = 2;
+        foreach (CartTypeRecord record in Types) {
+            record.Setting = config.Bind(SectionName, record.Id.ToString(), 0,
+                new ConfigDescription(EntryDescription, new AcceptableValueRange<int>(0, SliderMax),
+                    ModConfig.EntryTag(record.Name + " Capacity", order, hidden)));
+            Records[record.Id] = record;
+            order++;
+        }
+    }
+
     internal static void LogStartup() {
         ModLog.Info("=== STARTUP ===");
-        ModLog.Info("raw cache = \"" + ModConfig.KnownCarts.Value + "\"");
         ModLog.Info("Enabled=" + ModConfig.Enabled.Value + " CartCapacityEnabled=" + ModConfig.CartCapacityEnabled.Value
-            + " records=" + Records.Count);
-        foreach (CartTypeRecord record in Records.Values) {
-            ModLog.Info("  record " + record.Id + " name=\"" + record.Name + "\" slider="
+            + " bonus=" + BlessingBonus + " types=" + Records.Count);
+        foreach (CartTypeRecord record in Types) {
+            ModLog.Info("  type " + record.Id + " name=\"" + record.Name + "\" slider="
                 + (record.Setting == null ? "UNBOUND" : record.Setting.Value.ToString(CultureInfo.InvariantCulture)));
         }
         ModLog.Info("=== END STARTUP ===");
     }
 
-    // dumps the raw flag collection, because 'the blessing does not work' is indistinguishable from 'the flag is spelled differently' without it
+    internal static void NoteWorldLoaded(string origin) {
+        if (_flagsLogged || !ModLog.Enabled) {
+            return;
+        }
+        _flagsLogged = true;
+        LogWorldFlags(origin);
+    }
+
     private static void LogWorldFlags(string origin) {
         object flags = ServerGameState.WorldFlags;
         string dump;
@@ -74,237 +90,36 @@ internal static class CartCapacity {
         } else {
             dump = flags.ToString();
         }
-        ModLog.OnChange("flags:" + origin, "WorldFlags(" + origin + ") key=\"" + WorldFlagNames.MercuryCartCapacity
+        ModLog.Info("WorldFlags(" + origin + ") key=\"" + WorldFlagNames.MercuryCartCapacity
             + "\" HasFlag=" + Blessed + " raw=[" + dump + "]");
     }
 
-    internal static void LoadCache(string raw) {
-        Records.Clear();
-        if (string.IsNullOrEmpty(raw)) {
-            return;
-        }
-        string[] parts = raw.Split(';');
-        if (parts.Length == 0 || !string.Equals(parts[0], CacheVersion, StringComparison.Ordinal)) {
-            _dirty = true;
-            return;
-        }
-        for (int i = 1; i < parts.Length; i++) {
-            if (parts[i].Length == 0) {
-                continue;
-            }
-            string[] fields = parts[i].Split('|');
-            if (fields.Length < 2 || !Guid.TryParse(fields[0], out Guid id)) {
-                continue;
-            }
-            Records[id] = new CartTypeRecord {
-                Id = id,
-                Name = fields[1]
-            };
-        }
-    }
-
-    internal static void BindTypeEntries(ConfigFile config) {
-        bool hidden = !ModConfig.CartCapacityEnabled.Value;
-        List<CartTypeRecord> ordered = new List<CartTypeRecord>(Records.Values);
-        ordered.Sort(Compare);
-        int order = 2;
-        foreach (CartTypeRecord record in ordered) {
-            record.Setting = config.Bind(SectionName, record.Id.ToString(), 0,
-                new ConfigDescription(EntryDescription, new AcceptableValueRange<int>(0, SliderMax),
-                    ModConfig.EntryTag(DisplayName(record), order, hidden)));
-            order++;
-        }
-    }
-
-    // trustServerFlags is false on the CLIENT path: ServerGameState.WorldFlags is not populated there, so Blessed reads false and seeding would write the unblessed field in a blessed world
-    internal static void EnsureDiscovered(bool trustServerFlags) {
-        if (_discovered) {
-            return;
-        }
-        long now = Environment.TickCount64;
-        if (now < _nextDiscoveryTick) {
-            return;
-        }
-        _nextDiscoveryTick = now + DiscoveryRetryMs;
-        LogWorldFlags(trustServerFlags ? "server" : "client");
-        bool server = DiscoverServer();
-        bool found = server || DiscoverClient();
-        if (found) {
-            _discovered = true;
-            ModLog.Info("DISCOVERY done via " + (server ? "SERVER" : "CLIENT") + " db, types=" + Records.Count);
-            foreach (CartTypeRecord record in Records.Values) {
-                ModLog.Info("  type " + record.Id + " name=\"" + record.Name + "\" params="
-                    + DumpTemplateParameters(record.Id));
-            }
-            FlushCache();
-        } else {
-            ModLog.OnChange("discovery", "DISCOVERY waiting - no doodad database yet (trustServerFlags="
-                + trustServerFlags + ")");
-        }
-    }
-
-    // if a modded Cart's marker parameter (Iron Cart uses iron_cart=1) is present on the DOODAD TEMPLATE, we can tell vanilla types from modded ones and stop seeding vanilla numbers into modded records
-    private static string DumpTemplateParameters(Guid id) {
-        EntityWrapper wrapper;
-        if (!ServerEntityDataManager.TryGetEntityBaseData(id, out wrapper)
-            && !DoodadDatabaseManager.TryGetEntityBaseData(id, out wrapper)) {
-            return "<no template>";
-        }
-        var controller = wrapper == null ? null : wrapper.Controller;
-        var parameters = controller == null ? null : controller.Parameters;
-        var dictionary = parameters == null ? null : parameters.Dictionary;
-        if (dictionary == null || dictionary.Count == 0) {
-            return "<none>";
-        }
-        return "{" + string.Join(", ", dictionary.Select(kv => kv.Key + "=" + kv.Value)) + "}";
-    }
-
-    internal static void NoteLiveType(Guid typeId) {
-        if (typeId != Guid.Empty) {
-            Track(typeId);
-        }
-    }
-
-    internal static void FlushCache() {
-        if (!_dirty) {
-            return;
-        }
-        _dirty = false;
-        ModConfig.KnownCarts.Value = Serialize();
-        ModLog.OnChange("cache", "CACHE = " + ModConfig.KnownCarts.Value);
-    }
-
-    // 0 means "do not interfere": the master toggle, the feature toggle or the per-type value is off / Default. A configured number is the BASE and the blessing adds on top of it
     internal static int GetEnforcedCapacity(EntityWrapper cartEntity) {
         if (cartEntity == null || !Enforcing) {
             return 0;
         }
         if (!Records.TryGetValue(cartEntity.BaseGuid, out CartTypeRecord record) || record.Setting == null) {
+            ModLog.AdvancedOnChange("cap:" + cartEntity.BaseGuid, "CAPACITY type=" + cartEntity.BaseGuid
+                + " is not a vanilla Cart type - Cart Capacity does not apply to it");
             return 0;
         }
         int configured = record.Setting.Value;
         if (configured <= 0) {
+            ModLog.AdvancedOnChange("cap:" + record.Id, "CAPACITY " + record.Name + " type=" + record.Id
+                + " slider=0 (Default) - not enforced");
             return 0;
         }
-        int bonus = Blessed ? DefaultBonus : 0;
+        int bonus = Blessed ? BlessingBonus : 0;
         ModLog.AdvancedOnChange("cap:" + record.Id, "CAPACITY " + record.Name + " base=" + configured + " bonus=" + bonus
             + " blessed=" + Blessed + " -> " + (configured + bonus));
         return configured + bonus;
     }
 
-    // best available answer to "how much fits on this Cart", used by the free-slot rule even when the feature is off
     internal static int GetKnownCapacity(EntityWrapper cartEntity) {
         int enforced = GetEnforcedCapacity(cartEntity);
         if (enforced > 0) {
             return enforced;
         }
         return Blessed ? VanillaBlessed : VanillaBase;
-    }
-
-    private static bool DiscoverServer() {
-        Dictionary<Guid, EntitySystem> systems = ServerEntityDataManager.EntitySystems;
-        if (systems == null || systems.Count == 0) {
-            return false;
-        }
-        foreach (Guid id in new List<Guid>(systems.Keys)) {
-            if (ServerEntityDataManager.TryGetEntityBaseData(id, out EntityWrapper wrapper) && IsCart(wrapper)) {
-                Track(id);
-            }
-        }
-        return true;
-    }
-
-    private static bool DiscoverClient() {
-        Dictionary<Guid, EntitySystem> systems = DoodadDatabaseManager.EntitySystems;
-        if (systems == null || systems.Count == 0) {
-            return false;
-        }
-        foreach (Guid id in new List<Guid>(systems.Keys)) {
-            if (DoodadDatabaseManager.TryGetEntityBaseData(id, out EntityWrapper wrapper) && IsCart(wrapper)) {
-                Track(id);
-            }
-        }
-        return true;
-    }
-
-    private static bool IsCart(EntityWrapper wrapper) {
-        if (wrapper == null) {
-            return false;
-        }
-        return wrapper.Controller is ServerCart2Controller || wrapper.Controller is Cart2Controller;
-    }
-
-    private static CartTypeRecord Track(Guid id) {
-        if (!Records.TryGetValue(id, out CartTypeRecord record)) {
-            record = new CartTypeRecord { Id = id };
-            Records[id] = record;
-            _dirty = true;
-        }
-        if (string.IsNullOrEmpty(record.Name)) {
-            string name = ResolveName(id);
-            if (!string.IsNullOrEmpty(name)) {
-                record.Name = name;
-                _dirty = true;
-            }
-        }
-        return record;
-    }
-
-    // several constructions can point at ONE doodad Guid, so a name is only trustworthy when exactly one matches
-    private static string ResolveName(Guid id) {
-        var map = ConstructionDataBase.DataMap;
-        if (map == null) {
-            return string.Empty;
-        }
-        string label = string.Empty;
-        int matches = 0;
-        foreach (var model in map.Values) {
-            if (string.IsNullOrEmpty(model.SpawnedId)) {
-                continue;
-            }
-            if (!Guid.TryParse(model.SpawnedId, out Guid spawned) || spawned != id) {
-                continue;
-            }
-            matches++;
-            if (matches > 1) {
-                return string.Empty;
-            }
-            label = Translate(model.Name.Id);
-        }
-        return matches == 1 ? label : string.Empty;
-    }
-
-    // a StringId is EITHER a translation key OR a raw literal; GetTranslation would wrap a literal in angle brackets
-    private static string Translate(string key) {
-        if (string.IsNullOrEmpty(key)) {
-            return string.Empty;
-        }
-        return StringDefinitions.TryGetString(key, out string translated) ? translated : key;
-    }
-
-    private static string DisplayName(CartTypeRecord record) {
-        return (string.IsNullOrEmpty(record.Name) ? UnknownName : record.Name) + " Capacity";
-    }
-
-    private static string Serialize() {
-        StringBuilder builder = new StringBuilder(CacheVersion);
-        foreach (CartTypeRecord record in Records.Values) {
-            builder.Append(';')
-                .Append(record.Id.ToString()).Append('|')
-                .Append(Sanitize(record.Name));
-        }
-        return builder.ToString();
-    }
-
-    private static string Sanitize(string name) {
-        if (string.IsNullOrEmpty(name)) {
-            return string.Empty;
-        }
-        return name.Replace('|', ' ').Replace(';', ' ');
-    }
-
-    private static int Compare(CartTypeRecord left, CartTypeRecord right) {
-        int byName = string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase);
-        return byName != 0 ? byName : left.Id.CompareTo(right.Id);
     }
 }

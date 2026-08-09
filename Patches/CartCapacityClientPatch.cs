@@ -28,11 +28,10 @@ internal static class CartCapacityClientPatch {
         }
     }
 
-    // the client doodad database is the discovery fallback, so a Cart appearing here is the same "a world is loaded" proof the server patch uses
     [HarmonyPatch(typeof(Cart2Controller), nameof(Cart2Controller.EntityInitialize))]
-    private static class Discovery {
+    private static class Flags {
         private static void Postfix() {
-            CartCapacity.EnsureDiscovered(false);
+            CartCapacity.NoteWorldLoaded("client");
         }
     }
 }

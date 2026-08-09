@@ -63,9 +63,8 @@ internal static class CartCargo {
         States.GetOrCreateValue(cart).OccupiedStamp = -1;
     }
 
-    // how many slot parameters name CARGO right now, including another mod's
+    // how many slot parameters name CARGO right now, including another mod's. Compared against the carrier count, this detects the tick where a Cart's bookkeeping and its real cargo disagree
     // a Cart's parameters hold several Guids that are NOT cargo - owner_character_id, following, wheels_guid - so counting every Guid-shaped value inflated this by one or two and made Carts refuse early. Carriable is the same property CanBePickedUp uses and the same one CollectCarried filters on, so both halves now measure the same thing without knowing any mod's key names
-    // DISTINCT ids, not entries: a vanilla Cart in the wild carries the same two items across five slot keys, and counting entries made it read as full at 5 while holding 2
     private static int SlottedCount(ServerCart2Controller cart) {
         EntityWrapper cartEntity = cart.Entity;
         var parameters = cart.Parameters;
@@ -236,9 +235,6 @@ internal static class CartCargo {
 
         state.OccupiedStamp = -1;
         Publish(cartEntity, state);
-
-        CartCapacity.NoteLiveType(cartEntity.BaseGuid);
-        CartCapacity.FlushCache();
     }
 
     // the whole picture for one Cart in one line block: what it carries, which of those the parameters claim, and every parameter it has. This is what identifies cargo held by a mod whose slot keys we cannot see
