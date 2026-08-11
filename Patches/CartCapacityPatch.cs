@@ -12,15 +12,17 @@ internal static class CartCapacityPatch {
         [HarmonyPriority(Priority.First)]
         private static bool Prefix(ServerCart2Controller __instance, ref bool __result, out bool __state) {
             __state = false;
-            int capacity = CartCapacity.GetEnforcedCapacity(__instance.Entity);
-            if (capacity <= 0 || CartCargo.GetOccupied(__instance) < capacity) {
+            if (!CartCapacity.TryGetEnforcedCapacity(__instance.Entity, out int capacity)) {
+                return true;
+            }
+            int occupied = CartCargo.GetOccupied(__instance);
+            if (occupied < capacity) {
                 return true;
             }
             __state = true;
             __result = false;
             ModLog.AdvancedOnChange("block:" + __instance.Entity.Id,
-                "BLOCK cart=" + __instance.Entity.Id + " occupied=" + CartCargo.GetOccupied(__instance)
-                + " >= cap=" + capacity);
+                "BLOCK cart=" + __instance.Entity.Id + " occupied=" + occupied + " >= cap=" + capacity);
             return false;
         }
 
@@ -34,8 +36,7 @@ internal static class CartCapacityPatch {
             if (__state) {
                 return;
             }
-            int capacity = CartCapacity.GetEnforcedCapacity(__instance.Entity);
-            if (capacity <= 0) {
+            if (!CartCapacity.TryGetEnforcedCapacity(__instance.Entity, out int capacity)) {
                 return;
             }
             if (entity == null || entity.Removed || entity.CarrierId.HasValue) {

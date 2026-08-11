@@ -18,12 +18,10 @@ internal sealed class CartTypeRecord {
 }
 
 internal static class CartCapacity {
-    internal const int VanillaBase = 4;
-    internal const int VanillaBlessed = 5;
-
+    private const int DefaultCapacity = 4;
     private const int SliderMax = 20;
     private const string SectionName = "Cart Capacity";
-    private const string EntryDescription = "0 = Default, which leaves this cart at its normal capacity of 4 (5 with the Mercury blessing). Any other value replaces that base of 4.";
+    private const string EntryDescription = "The default capacity of this cart is 4.";
 
     private static readonly CartTypeRecord[] Types = {
         new CartTypeRecord { Id = new Guid("5af0ea10-21de-404a-a869-b0079653ee0b"), Name = "Wooden Cart" },
@@ -53,7 +51,7 @@ internal static class CartCapacity {
         Records.Clear();
         int order = 2;
         foreach (CartTypeRecord record in Types) {
-            record.Setting = config.Bind(SectionName, record.Id.ToString(), 0,
+            record.Setting = config.Bind(SectionName, record.Id.ToString(), DefaultCapacity,
                 new ConfigDescription(EntryDescription, new AcceptableValueRange<int>(0, SliderMax),
                     ModConfig.EntryTag(record.Name + " Capacity", order, hidden)));
             Records[record.Id] = record;
@@ -94,32 +92,21 @@ internal static class CartCapacity {
             + "\" HasFlag=" + Blessed + " raw=[" + dump + "]");
     }
 
-    internal static int GetEnforcedCapacity(EntityWrapper cartEntity) {
+    internal static bool TryGetEnforcedCapacity(EntityWrapper cartEntity, out int capacity) {
+        capacity = 0;
         if (cartEntity == null || !Enforcing) {
-            return 0;
+            return false;
         }
         if (!Records.TryGetValue(cartEntity.BaseGuid, out CartTypeRecord record) || record.Setting == null) {
             ModLog.AdvancedOnChange("cap:" + cartEntity.BaseGuid, "CAPACITY type=" + cartEntity.BaseGuid
                 + " is not a vanilla Cart type - Cart Capacity does not apply to it");
-            return 0;
+            return false;
         }
         int configured = record.Setting.Value;
-        if (configured <= 0) {
-            ModLog.AdvancedOnChange("cap:" + record.Id, "CAPACITY " + record.Name + " type=" + record.Id
-                + " slider=0 (Default) - not enforced");
-            return 0;
-        }
         int bonus = Blessed ? BlessingBonus : 0;
+        capacity = configured + bonus;
         ModLog.AdvancedOnChange("cap:" + record.Id, "CAPACITY " + record.Name + " base=" + configured + " bonus=" + bonus
-            + " blessed=" + Blessed + " -> " + (configured + bonus));
-        return configured + bonus;
-    }
-
-    internal static int GetKnownCapacity(EntityWrapper cartEntity) {
-        int enforced = GetEnforcedCapacity(cartEntity);
-        if (enforced > 0) {
-            return enforced;
-        }
-        return Blessed ? VanillaBlessed : VanillaBase;
+            + " blessed=" + Blessed + " -> " + capacity);
+        return true;
     }
 }
