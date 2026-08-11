@@ -37,14 +37,6 @@ internal static class CartCargo {
     private static readonly List<Guid> ReuseAdopt = new List<Guid>();
     private static readonly HashSet<Guid> ReuseSlotted = new HashSet<Guid>();
 
-    internal static bool HasFreeSlot(ServerCart2Controller cart) {
-        EntityWrapper cartEntity = cart.Entity;
-        if (cartEntity == null || cartEntity.Removed) {
-            return false;
-        }
-        return GetOccupied(cart) < CartCapacity.GetKnownCapacity(cartEntity);
-    }
-
     // vanilla runs PickupEntity for every touching entity every tick, so the count is memoized and only invalidated when it really changes
     internal static int GetOccupied(ServerCart2Controller cart) {
         CartState state = States.GetOrCreateValue(cart);
@@ -212,11 +204,11 @@ internal static class CartCargo {
             }
         }
 
-        int capacity = CartCapacity.GetEnforcedCapacity(cartEntity);
+        bool enforced = CartCapacity.TryGetEnforcedCapacity(cartEntity, out int capacity);
         int slotted = ReuseSweep.Count - ReuseUnslotted.Count;
-        int keep = capacity <= 0
-            ? 0
-            : Math.Max(0, Math.Min(Math.Min(ReuseUnslotted.Count, CartCargoSync.MaxExtras), capacity - slotted));
+        int keep = enforced
+            ? Math.Max(0, Math.Min(Math.Min(ReuseUnslotted.Count, CartCargoSync.MaxExtras), capacity - slotted))
+            : 0;
 
         StableOrder(state, ReuseUnslotted);
         state.Extras.Clear();
@@ -228,7 +220,8 @@ internal static class CartCargo {
             EntityWrapper item = Find(ReuseUnslotted, ReuseOrder[i]);
             if (item != null) {
                 ModLog.Advanced("RELEASE unslotted " + Short(item.Id) + " from cart " + Short(cartEntity.Id)
-                    + " (cap=" + capacity + " keep=" + keep + " slotted=" + slotted + ")");
+                    + " (cap=" + (enforced ? capacity.ToString() : "none") + " keep=" + keep
+                    + " slotted=" + slotted + ")");
                 Release(cartEntity, item);
             }
         }
@@ -244,11 +237,12 @@ internal static class CartCargo {
         }
         var parameters = cart.Parameters;
         var dictionary = parameters == null ? null : parameters.Dictionary;
+        bool enforced = CartCapacity.TryGetEnforcedCapacity(cartEntity, out int capacity);
         StringBuilder builder = new StringBuilder();
         builder.Append("SWEEP cart=").Append(cartEntity.Id).Append(" type=").Append(cartEntity.BaseGuid)
             .Append(" carried=").Append(ReuseSweep.Count)
             .Append(" slotted=").Append(SlottedCount(cart))
-            .Append(" cap=").Append(CartCapacity.GetEnforcedCapacity(cartEntity))
+            .Append(" cap=").Append(enforced ? capacity.ToString() : "none")
             .Append(" blessed=").Append(CartCapacity.Blessed);
         builder.Append(" | fields c1=").Append(Short(cart.Carried1)).Append(" c2=").Append(Short(cart.Carried2))
             .Append(" c3=").Append(Short(cart.Carried3)).Append(" c4=").Append(Short(cart.Carried4))
