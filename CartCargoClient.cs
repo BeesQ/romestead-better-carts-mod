@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Candide.Entities.Controllers.Other;
 using Candide.GameModels;
+using Candide.Sound;
 using CandideCreator.Shared.Helpers;
 using Microsoft.Xna.Framework;
 using Shared.Entity;
@@ -15,7 +16,13 @@ internal static class CartCargoClient {
     private const float RingHeight = 6f;
     private const float RingJitter = 0.02f;
     private const int SeatsPerLayer = 4;
-    private const float LayerStep = 2.5f;
+    private const float LayerStep = 6f;
+
+    // the ring puts seats Right and Left at world Y 0, and a radius jitter cannot separate them because their offset is scaled by sin(angle), which is 0 there. This nudges each item along the DEPTH axis in world space, after the cart rotation, so the separation survives every cart facing. 0.02 matches the margin vanilla's own four items get from their radius jitter
+    private const float DepthNudge = 0.02f;
+
+    // vanilla emits this from Cart2Controller.UpdateSlot whenever a c1..c5 parameter changes to a new item, and nothing on the server plays it. Extras ride bc_cargo instead of cN, so UpdateSlot never sees them and the sound has to be replicated here or cargo past the vanilla slots lands silently
+    private const string PickupSound = "event:/hits/impact/impact_storage";
 
     private static readonly ConditionalWeakTable<Cart2Controller, List<Guid>> Slots =
         new ConditionalWeakTable<Cart2Controller, List<Guid>>();
@@ -36,6 +43,8 @@ internal static class CartCargoClient {
         if (string.Equals(previous[0], stored, StringComparison.Ordinal)) {
             return;
         }
+        // the very first sync for a cart is adoption from the save, not a pickup - without this a cart loaded holding extras would fire one sound per item on world load
+        bool firstSync = previous[0] == null;
         previous[0] = stored;
         ModLog.Advanced("CLIENT SYNC cart=" + cart.Entity.Id + " bc_cargo=\"" + stored + "\" had=" + slots.Count);
         CartCargoSync.Unpack(stored, ReuseIncoming);
@@ -44,9 +53,19 @@ internal static class CartCargoClient {
                 ReleaseOne(cart, id);
             }
         }
+        bool gained = false;
+        foreach (Guid id in ReuseIncoming) {
+            if (!slots.Contains(id)) {
+                gained = true;
+                break;
+            }
+        }
         slots.Clear();
         foreach (Guid id in ReuseIncoming) {
             slots.Add(id);
+        }
+        if (gained && !firstSync) {
+            cart.Entity.EmitSoundOneShot(PickupSound);
         }
     }
 
@@ -107,7 +126,8 @@ internal static class CartCargoClient {
         int seat = index % SeatsPerLayer;
         float direction = seat;
 
-        Vector3 offset = DirectionToVector3(direction) * (RingRadius + direction * RingJitter);
+        // the jitter is per ITEM, not per seat: seat 0 layer 0 and seat 0 layer 1 would otherwise share an X and Y and differ only in Z, which two sprites cannot be told apart by. Vanilla gets this free because its four sit on distinct diagonals
+        Vector3 offset = DirectionToVector3(direction) * (RingRadius + index * RingJitter);
         offset.Z = RingHeight + layer * LayerStep;
         offset = VectorExtension.ToXzy(offset);
 
@@ -115,7 +135,8 @@ internal static class CartCargoClient {
         Vector3.Transform(ref offset, ref cart.Entity.MeshTransformMatrixRef, out rotated);
 
         item.Position = VectorExtension.ToXzy(rotated) + cart.Entity.Position
-            + cart.Entity.Velocity * cart.Entity.Fdt;
+            + cart.Entity.Velocity * cart.Entity.Fdt
+            + new Vector3(0f, index * DepthNudge, 0f);
         item.Velocity = cart.Entity.Velocity;
         item.System.CollisionGroup.UpdatePositionAndVelocity(item);
     }

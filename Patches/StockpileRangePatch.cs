@@ -412,10 +412,7 @@ internal static class StockpileRangePatch {
     }
 
     private static bool HasFreeSlot(ServerCart2Controller cart) {
-        if (!cart.Carried1.HasValue || !cart.Carried2.HasValue || !cart.Carried3.HasValue || !cart.Carried4.HasValue) {
-            return true;
-        }
-        return !cart.Carried5.HasValue && WorldFlagsHelper.HasFlag(ServerGameState.WorldFlags, "worship_flag:cart_capacity");
+        return CartCargo.HasFreeSlot(cart);
     }
 
     private static string GetFillSound(string resourceId) {

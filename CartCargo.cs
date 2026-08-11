@@ -37,6 +37,15 @@ internal static class CartCargo {
     private static readonly List<Guid> ReuseAdopt = new List<Guid>();
     private static readonly HashSet<Guid> ReuseSlotted = new HashSet<Guid>();
 
+    // Stockpile Range's capacity pre-check. A carrier COUNT is exact for every mod's extra slots, unlike reading Carried1..5, which caps every cart at the vanilla five no matter what Cart Capacity allows
+    internal static bool HasFreeSlot(ServerCart2Controller cart) {
+        EntityWrapper cartEntity = cart.Entity;
+        if (cartEntity == null || cartEntity.Removed) {
+            return false;
+        }
+        return GetOccupied(cart) < CartCapacity.GetKnownCapacity(cartEntity);
+    }
+
     // vanilla runs PickupEntity for every touching entity every tick, so the count is memoized and only invalidated when it really changes
     internal static int GetOccupied(ServerCart2Controller cart) {
         CartState state = States.GetOrCreateValue(cart);

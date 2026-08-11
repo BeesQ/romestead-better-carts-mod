@@ -18,6 +18,9 @@ internal sealed class CartTypeRecord {
 }
 
 internal static class CartCapacity {
+    internal const int VanillaBase = 4;
+    internal const int VanillaBlessed = 5;
+
     private const int DefaultCapacity = 4;
     private const int SliderMax = 20;
     private const string SectionName = "Cart Capacity";
@@ -108,5 +111,12 @@ internal static class CartCapacity {
         ModLog.AdvancedOnChange("cap:" + record.Id, "CAPACITY " + record.Name + " base=" + configured + " bonus=" + bonus
             + " blessed=" + Blessed + " -> " + capacity);
         return true;
+    }
+
+    internal static int GetKnownCapacity(EntityWrapper cartEntity) {
+        if (TryGetEnforcedCapacity(cartEntity, out int enforced)) {
+            return enforced;
+        }
+        return Blessed ? VanillaBlessed : VanillaBase;
     }
 }
