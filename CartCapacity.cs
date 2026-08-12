@@ -22,7 +22,7 @@ internal static class CartCapacity {
     internal const int VanillaBlessed = 5;
 
     private const int DefaultCapacity = 4;
-    private const int SliderMax = 20;
+    private const int SliderMax = 64;
     private const string SectionName = "Cart Capacity";
     private const string EntryDescription = "The default capacity of this cart is 4.";
 
@@ -39,6 +39,13 @@ internal static class CartCapacity {
         get { return ModConfig.Enabled.Value && ModConfig.CartCapacityEnabled.Value; }
     }
 
+    internal static bool Ejecting {
+        get {
+            return Enforcing && (ModConfig.CartCapacityEjectOverflow == null
+                || ModConfig.CartCapacityEjectOverflow.Value);
+        }
+    }
+
     internal static bool Blessed {
         get { return WorldFlagsHelper.HasFlag(ServerGameState.WorldFlags, WorldFlagNames.MercuryCartCapacity); }
     }
@@ -52,7 +59,7 @@ internal static class CartCapacity {
     internal static void BindTypeEntries(ConfigFile config) {
         bool hidden = !ModConfig.CartCapacityEnabled.Value;
         Records.Clear();
-        int order = 2;
+        int order = 3;
         foreach (CartTypeRecord record in Types) {
             record.Setting = config.Bind(SectionName, record.Id.ToString(), DefaultCapacity,
                 new ConfigDescription(EntryDescription, new AcceptableValueRange<int>(0, SliderMax),

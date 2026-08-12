@@ -7,7 +7,7 @@ namespace BetterCarts;
 // the ONE entity parameter Better Carts writes. Vanilla c1..c5 and Iron Cart c6..c8 are one key per slot; a single packed key keeps the save footprint to one entry per Cart and cannot collide with a future mod's cN
 internal static class CartCargoSync {
     internal const string CargoKey = "bc_cargo";
-    internal const int MaxExtras = 40;
+    internal const int MaxExtras = 128;
 
     private const char Separator = ',';
 
