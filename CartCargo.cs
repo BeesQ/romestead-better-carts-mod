@@ -17,6 +17,13 @@ internal static class CartCargo {
     private const int SweepIntervalMs = 100;
     private const float StackHeight = 6f;
     private const float ScanTiles = 2f;
+    private const float EjectTiles = 1f;
+
+    private static readonly string[] SlotKeys = {
+        ServerCart2Controller.Carried1IdKey, ServerCart2Controller.Carried2IdKey,
+        ServerCart2Controller.Carried3IdKey, ServerCart2Controller.Carried4IdKey,
+        ServerCart2Controller.Carried5IdKey
+    };
 
     private sealed class CartState {
         internal readonly List<Guid> Extras = new List<Guid>();
@@ -25,6 +32,7 @@ internal static class CartCargo {
         internal string Written;
         internal long OccupiedStamp = -1;
         internal int Occupied;
+        internal bool EjectDone;
     }
 
     private static readonly ConditionalWeakTable<ServerCart2Controller, CartState> States =
@@ -33,6 +41,7 @@ internal static class CartCargo {
     private static readonly List<EntityWrapper> ReuseCount = new List<EntityWrapper>();
     private static readonly List<EntityWrapper> ReuseSweep = new List<EntityWrapper>();
     private static readonly List<EntityWrapper> ReuseUnslotted = new List<EntityWrapper>();
+    private static readonly List<EntityWrapper> ReuseDrop = new List<EntityWrapper>();
     private static readonly List<Guid> ReuseOrder = new List<Guid>();
     private static readonly List<Guid> ReuseAdopt = new List<Guid>();
     private static readonly HashSet<Guid> ReuseSlotted = new HashSet<Guid>();
@@ -235,8 +244,66 @@ internal static class CartCargo {
             }
         }
 
+        // dropped items land near the Cart, so re-evaluating this every sweep drops them again
+        bool firstSweep = !state.EjectDone;
+        state.EjectDone = true;
+        if (firstSweep && enforced && CartCapacity.Ejecting) {
+            EjectSurplus(cart, state, cartEntity, capacity, slotted);
+        }
+
         state.OccupiedStamp = -1;
         Publish(cartEntity, state);
+    }
+
+    private static void EjectSurplus(ServerCart2Controller cart, CartState state, EntityWrapper cartEntity,
+        int capacity, int slotted) {
+        int surplus = slotted - capacity;
+        if (surplus <= 0) {
+            return;
+        }
+        ReuseDrop.Clear();
+        for (int i = SlotKeys.Length - 1; i >= 0 && ReuseDrop.Count < surplus; i--) {
+            ref Guid? slot = ref SlotRef(cart, i);
+            if (!slot.HasValue) {
+                continue;
+            }
+            EntityWrapper item = cartEntity.System.GetEntityById(slot.Value);
+            if (item == null || item.Removed || item.CarrierId != cartEntity.Id) {
+                continue;
+            }
+            // vanilla ClearSlot leaves both the field and the parameter set
+            slot = null;
+            ServerEntitySystemManager.UpdateEntityParameter(cartEntity, SlotKeys[i], string.Empty,
+                SyncStrategy.Everyone());
+            ReuseDrop.Add(item);
+        }
+        for (int i = 0; i < ReuseDrop.Count; i++) {
+            ModLog.Advanced("DROP " + Short(ReuseDrop[i].Id) + " from cart " + Short(cartEntity.Id)
+                + " (slotted=" + slotted + " cap=" + capacity + " surplus=" + surplus + ")");
+            Drop(cartEntity, ReuseDrop[i], i, ReuseDrop.Count);
+        }
+        ReuseDrop.Clear();
+        state.OccupiedStamp = -1;
+    }
+
+    private static ref Guid? SlotRef(ServerCart2Controller cart, int index) {
+        switch (index) {
+            case 0: return ref cart.Carried1;
+            case 1: return ref cart.Carried2;
+            case 2: return ref cart.Carried3;
+            case 3: return ref cart.Carried4;
+            default: return ref cart.Carried5;
+        }
+    }
+
+    private static void Drop(EntityWrapper cartEntity, EntityWrapper item, int index, int count) {
+        Release(cartEntity, item);
+        double angle = Math.PI * 2.0 * index / count;
+        float radius = WorldInfo.TileSize * EjectTiles;
+        item.Position = cartEntity.Position + new Vector3((float)Math.Cos(angle) * radius,
+            (float)Math.Sin(angle) * radius, StackHeight);
+        item.Velocity = Vector3.Zero;
+        item.System.CollisionGroup.UpdatePositionAndVelocity(item);
     }
 
     // the whole picture for one Cart in one line block: what it carries, which of those the parameters claim, and every parameter it has. This is what identifies cargo held by a mod whose slot keys we cannot see
