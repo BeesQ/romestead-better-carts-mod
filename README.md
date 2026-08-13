@@ -11,6 +11,7 @@ A [BepInEx 6 CoreCLR](https://www.nexusmods.com/romestead/mods/1) mod for **Rome
 - **Chain Overflow** - when a full Cart picks up an item, it is passed to the next Cart in the chain with a free slot. Nothing is left behind until every chained Cart is full
 - **Bucket Priority** - prefer grabbing an empty Bucket when unloading a Cart
 - **Cart Release Fix** - releasing a pulled Cart never grabs a different Cart on the same press
+- **Cart Capacity** - set how many items the vanilla Carts can carry (0-64, default 4). The Mercury cart-capacity blessing adds a configurable bonus on top (0-64, default 1), and Eject Overflow drops anything above the limit beside the Cart when a world loads. Modded Cart types are not covered
 - **Collect Range** - Carts automatically pick up loose items within a configurable range (0-10 tiles, default 2). 0 = vanilla
 - **Deposit Range** - Carts deposit matching cargo into Material Storages within range (0-10 tiles, default 2). 0 = vanilla
 - **Connect Range** - free Carts are pulled toward a Cart the player is pulling once in range (0-10 tiles, default 2). 0 = vanilla
@@ -18,24 +19,35 @@ A [BepInEx 6 CoreCLR](https://www.nexusmods.com/romestead/mods/1) mod for **Rome
 
 Server-authoritative features: only the host needs the mod, joining players do not need anything installed. Bucket Priority and Cart Release Fix are client-side: they apply to each player that has the mod installed
 
+Cart Capacity is server-authoritative: the host's values apply to everyone, but each player needs the mod to SEE cargo beyond the vanilla slots
+
 ## Configuration
 
-Settings live under **Settings -> Mod Settings** in-game (via [Mod Settings Menu](https://www.nexusmods.com/romestead/mods/8)), or in `BepInEx/config/com.beesq.romestead.bettercarts.cfg`
+Settings are configured from the **Mod Settings** button in the main menu (added by [Mod Settings Menu](https://www.nexusmods.com/romestead/mods/8)), or in `BepInEx/config/com.beesq.romestead.bettercarts.cfg`
 
-| Section          | Key                                           | Default                 | Meaning                                                          |
-| ---------------- | --------------------------------------------- | ----------------------- | ---------------------------------------------------------------- |
-| General          | Enabled                                       | true                    | Master on/off for the whole mod                                  |
-| Chain Overflow   | Enabled                                       | true                    | Pass overflow to the next chained Cart                           |
-| Bucket Priority  | Enabled                                       | true                    | Prioritize grabbing an empty Bucket when unloading a Cart        |
-| Cart Release Fix | Enabled                                       | true                    | Releasing a pulled Cart never grabs a different Cart             |
-| Collect Range    | Enabled / Range                               | true / 2                | Ranged pickup of loose items (0-10 tiles, 0 = vanilla)           |
-| Deposit Range    | Enabled / Range                               | true / 2                | Ranged deposit into Material Storages (0-10 tiles, 0 = vanilla)  |
-| Connect Range    | Enabled / Range                               | true / 2                | Ranged Cart pulling (0-10 tiles, 0 = vanilla)                    |
-| Stockpile Range  | Enabled / Range / While Pulled / While Parked | true / 2 / true / false | Take from Output stockpiles into Carts (0-10 tiles, 0 = vanilla) |
+| Section          | Key                                                                   | Default                 | Meaning                                                          |
+| ---------------- | --------------------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------- |
+| General          | Enabled                                                               | true                    | Master on/off for the whole mod                                  |
+| Chain Overflow   | Enabled                                                               | true                    | Pass overflow to the next chained Cart                           |
+| Bucket Priority  | Enabled                                                               | true                    | Prioritize grabbing an empty Bucket when unloading a Cart        |
+| Cart Release Fix | Enabled                                                               | true                    | Releasing a pulled Cart never grabs a different Cart             |
+| Cart Capacity    | Enabled / Eject Overflow / Blessing Bonus / Wooden Cart / Bronze Cart | true / true / 1 / 4 / 4 | Per-Cart-type carry capacity for the vanilla Carts (0-64)        |
+| Collect Range    | Enabled / Range                                                       | true / 2                | Ranged pickup of loose items (0-10 tiles, 0 = vanilla)           |
+| Deposit Range    | Enabled / Range                                                       | true / 2                | Ranged deposit into Material Storages (0-10 tiles, 0 = vanilla)  |
+| Connect Range    | Enabled / Range                                                       | true / 2                | Ranged Cart pulling (0-10 tiles, 0 = vanilla)                    |
+| Stockpile Range  | Enabled / Range / While Pulled / While Parked                         | true / 2 / true / false | Take from Output stockpiles into Carts (0-10 tiles, 0 = vanilla) |
 
 ## Compatibility
 
-- [Iron Cart](https://www.nexusmods.com/romestead/mods/92) by burdock12 - compatible, tested together
+- [Iron Cart](https://www.nexusmods.com/romestead/mods/92) by burdock12 - compatible but not supported by the Cart Capacity feature
+- [Cart Capacity](https://www.nexusmods.com/romestead/mods/34) by Specsfo/Encordero - not compatible
+
+## Notes
+
+- The mod stores nothing in your save unless a Cart actually carries more than the game allows on its own - more than 4 items, or more than 5 with the Mercury blessing
+- Eject Overflow is the only part of the mod that moves your cargo: on world load, a Cart over its capacity drops the surplus beside itself
+- High capacity values can cause stutter and stack cargo into a tall tower above the Cart
+- Before removing the mod, turn Cart Capacity off and load each affected world once so extra cargo is released
 
 ## Install (players)
 

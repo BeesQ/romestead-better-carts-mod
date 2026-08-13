@@ -1,3 +1,13 @@
+## 1.3.0
+
+- Added Cart Capacity: set how many items the vanilla Carts can carry (0-64, default 4). Modded Cart types are not covered
+- Added Blessing Bonus: how much the Mercury cart-capacity blessing adds on top of a Cart's base capacity (0-64, default 1)
+- Added Eject Overflow (on by default): on world load, a Cart over its capacity drops the surplus beside itself
+- Stockpile Range now fills a Cart up to its configured capacity instead of stopping at the vanilla slots
+- Items collected beyond the vanilla slots now play the Cart pickup sound
+- Settings toggles are now labelled by what each feature does instead of "Enabled"
+- Corrected the settings location: Mod Settings is its own button in the main menu, not a page inside Settings
+
 ## 1.2.0
 
 - Added Cart Release Fix: releasing a pulled Cart never grabs a different Cart on the same press (client-side, applies per player with the mod)
