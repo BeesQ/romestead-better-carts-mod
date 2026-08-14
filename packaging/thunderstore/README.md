@@ -44,7 +44,7 @@ Manual: download the zip and extract its contents into Romestead/BepInEx/plugins
 - The mod stores nothing in your save unless a Cart actually carries more than the game allows on its own - more than 4 items, or more than 5 with the Mercury blessing
 - Eject Overflow is the only part of the mod that moves your cargo: on world load, a Cart over its capacity drops the surplus beside itself
 - High capacity values can cause stutter and stack cargo into a tall tower above the Cart
-- Before removing the mod, change Cart Capacity back to vanilla value and load each affected world once so extra cargo is released
+- Before removing the mod, change Carts Capacity and Mercury's blessing values back to vanilla, leave Eject Overflow on, and load each affected world once so extra cargo is released
 - Deposit Range takes only matching resources from Cart cargo
 - Stockpile Range takes only from Output stockpiles, a building's input storage is never drained
 

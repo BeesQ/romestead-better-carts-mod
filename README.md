@@ -4,7 +4,7 @@
 
 # Better Carts
 
-A [BepInEx 6 CoreCLR](https://www.nexusmods.com/romestead/mods/1) mod for **Romestead** that makes hauling with Carts more pleasant with quality-of-life features, all configurable in-game
+A [BepInEx 6 CoreCLR](https://www.nexusmods.com/romestead/mods/1) mod for game **[Romestead](https://store.steampowered.com/app/1805320/Romestead)** that makes hauling with Carts more pleasant with quality-of-life features, all configurable in-game
 
 ## Features
 
@@ -17,13 +17,9 @@ A [BepInEx 6 CoreCLR](https://www.nexusmods.com/romestead/mods/1) mod for **Rome
 - **Connect Range** - free Carts are pulled toward a Cart the player is pulling once in range (0-10 tiles, default 2). 0 = vanilla
 - **Stockpile Range** - Carts take resources from building Output stockpiles within range, into free slots and empty Buckets on the Cart (0-10 tiles, default 2). 0 = vanilla
 
-Server-authoritative features: only the host needs the mod, joining players do not need anything installed. Bucket Priority and Cart Release Fix are client-side: they apply to each player that has the mod installed
-
-Cart Capacity is server-authoritative: the host's values apply to everyone, but each player needs the mod to SEE cargo beyond the vanilla slots
-
 ## Configuration
 
-Settings are configured from the **Mod Settings** button in the main menu (added by [Mod Settings Menu](https://www.nexusmods.com/romestead/mods/8)), or in `BepInEx/config/com.beesq.romestead.bettercarts.cfg`
+All settings (master toggle, per-feature toggles etc.) are configured from the **Mod Settings** button in the main menu, or in BepInEx/config/com.beesq.romestead.bettercarts.cfg
 
 | Section          | Key                                                                   | Default                 | Meaning                                                          |
 | ---------------- | --------------------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------- |
@@ -37,21 +33,25 @@ Settings are configured from the **Mod Settings** button in the main menu (added
 | Connect Range    | Enabled / Range                                                       | true / 2                | Ranged Cart pulling (0-10 tiles, 0 = vanilla)                    |
 | Stockpile Range  | Enabled / Range / While Pulled / While Parked                         | true / 2 / true / false | Take from Output stockpiles into Carts (0-10 tiles, 0 = vanilla) |
 
+## Requirements
+
+- [BepinEx 6 For Romestead (Mod Loader)](https://www.nexusmods.com/romestead/mods/1)
+- [Mod Settings Menu (Settings Menu)](https://www.nexusmods.com/romestead/mods/8)
+
+## Multiplayer
+
+Server-authoritative features: only the host needs the mod, joining players do not need anything installed. Bucket Priority and Cart Release Fix are client-side: they apply to each player that has the mod installed
+
+Cart Capacity is server-authoritative: the host's values apply to everyone, but each player needs the mod to SEE cargo beyond the vanilla slots
+
 ## Compatibility
 
 - [Iron Cart](https://www.nexusmods.com/romestead/mods/92) by burdock12 - compatible but not supported by the Cart Capacity feature
-- [Cart Capacity](https://www.nexusmods.com/romestead/mods/34) by Specsfo/Encordero - not compatible
+- [Cart Capacity](https://www.nexusmods.com/romestead/mods/34) by Specsfo/Encordeo - not compatible
 
-## Notes
+## Install
 
-- The mod stores nothing in your save unless a Cart actually carries more than the game allows on its own - more than 4 items, or more than 5 with the Mercury blessing
-- Eject Overflow is the only part of the mod that moves your cargo: on world load, a Cart over its capacity drops the surplus beside itself
-- High capacity values can cause stutter and stack cargo into a tall tower above the Cart
-- Before removing the mod, turn Cart Capacity off and load each affected world once so extra cargo is released
-
-## Install (players)
-
-Recommended: grab it from a mod site, which also lists the Requirements below for you
+Recommended: grab it from a mod site, which also lists the Requirements above for you
 
 - **Nexus Mods**: https://www.nexusmods.com/romestead/mods/91
 - **Thunderstore**: https://thunderstore.io/c/romestead/p/BeesQ/BetterCarts (supports Install with Mod Manager)
@@ -64,7 +64,7 @@ Manual (works with a build from any source, including this repo's [Releases](htt
 
 ## Build (developers)
 
-Requires the .NET 8 SDK and a local Romestead install with the BepInEx loader already set up (the project references DLLs from the game folder)
+Requires the .NET 8 SDK and a local Romestead install with the BepInEx 6 CoreCLR loader already set up (the project references DLLs from the game folder)
 
 1. Set the game path once, then restart your terminal/IDE:
    ```
@@ -83,9 +83,18 @@ No game or loader assemblies are redistributed - they are referenced from your l
 
 Released under the [MIT License](LICENSE)
 
+## Notes
+
+- The mod stores nothing in your save unless a Cart actually carries more than the game allows on its own - more than 4 items, or more than 5 with the Mercury blessing
+- Eject Overflow is the only part of the mod that moves your cargo: on world load, a Cart over its capacity drops the surplus beside itself
+- High capacity values can cause stutter and stack cargo into a tall tower above the Cart
+- Before removing the mod, change Carts Capacity and Mercury's blessing values back to vanilla, leave Eject Overflow on, and load each affected world once so extra cargo is released
+- Deposit Range takes only matching resources from Cart cargo
+- Stockpile Range takes only from Output stockpiles, a building's input storage is never drained
+
 ## Bug Reports and Feedback
 
-Please [open an issue](https://github.com/BeesQ/romestead-better-carts-mod/issues) on this repo
+Please submit through GitHub Issues on this repo
 
 ## Links
 
