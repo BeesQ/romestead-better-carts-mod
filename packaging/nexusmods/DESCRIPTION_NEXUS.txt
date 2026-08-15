@@ -13,12 +13,12 @@ Better Carts makes hauling with Carts more pleasant with quality-of-life feature
 [/list]
 
 [size=4][b]Configuration[/b][/size]
-All settings (master toggle, per-feature toggles etc.) are configured from the [b]Mod Settings[/b] button in the main menu, or in BepInEx/config/com.beesq.romestead.bettercarts.cfg
+All settings (master toggle, per-feature toggles etc.) are configured from the [b]Mod Settings[/b] button in the main menu (added by [b]Mod Settings Menu[/b]), or in [b]BepInEx/config/com.beesq.romestead.bettercarts.cfg[/b]
 
 [size=4][b]Requirements[/b][/size]
 [list]
-[*][url=https://www.nexusmods.com/romestead/mods/1]BepinEx 6 For Romestead (Mod Loader)[/url][/*]
-[*][url=https://www.nexusmods.com/romestead/mods/8]Mod Settings Menu (Settings Menu)[/url][/*]
+[*][url=https://www.nexusmods.com/romestead/mods/1]BepinEx 6 For Romestead (Mod Loader)[/url] by Ice Box Studio[/*]
+[*][url=https://www.nexusmods.com/romestead/mods/8]Mod Settings Menu (Settings Menu)[/url] by Ice Box Studio[/*]
 [/list]
 
 [size=4][b]Multiplayer[/b][/size]

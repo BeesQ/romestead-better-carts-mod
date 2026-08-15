@@ -19,7 +19,7 @@ A [BepInEx 6 CoreCLR](https://www.nexusmods.com/romestead/mods/1) mod for game *
 
 ## Configuration
 
-All settings (master toggle, per-feature toggles etc.) are configured from the **Mod Settings** button in the main menu, or in BepInEx/config/com.beesq.romestead.bettercarts.cfg
+All settings (master toggle, per-feature toggles etc.) are configured from the **Mod Settings** button in the main menu (added by **Mod Settings Menu**), or in **BepInEx/config/com.beesq.romestead.bettercarts.cfg**
 
 | Section          | Key                                                                   | Default                 | Meaning                                                          |
 | ---------------- | --------------------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------- |
@@ -35,8 +35,8 @@ All settings (master toggle, per-feature toggles etc.) are configured from the *
 
 ## Requirements
 
-- [BepinEx 6 For Romestead (Mod Loader)](https://www.nexusmods.com/romestead/mods/1)
-- [Mod Settings Menu (Settings Menu)](https://www.nexusmods.com/romestead/mods/8)
+- [BepinEx 6 For Romestead (Mod Loader)](https://www.nexusmods.com/romestead/mods/1) by Ice Box Studio
+- [Mod Settings Menu (Settings Menu)](https://www.nexusmods.com/romestead/mods/8) by Ice Box Studio
 
 ## Multiplayer
 

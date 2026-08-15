@@ -13,12 +13,12 @@ Better Carts makes hauling with Carts more pleasant with quality-of-life feature
 
 ## Configuration
 
-All settings (master toggle, per-feature toggles etc.) are configured from the **Mod Settings** button in the main menu, or in BepInEx/config/com.beesq.romestead.bettercarts.cfg
+All settings (master toggle, per-feature toggles etc.) are configured from the **Mod Settings** button in the main menu (added by **Mod Settings Menu**), or in **BepInEx/config/com.beesq.romestead.bettercarts.cfg**
 
 ## Requirements
 
-- [BepInExPack_Romestead (Mod Loader)](https://thunderstore.io/c/romestead/p/Romestead_Modding/BepInExPack_Romestead)
-- [ModSettingsMenu (Settings Menu)](https://thunderstore.io/c/romestead/p/Ice_Box_Studio_Romestead/ModSettingsMenu)
+- [BepInExPack_Romestead (Mod Loader)](https://thunderstore.io/c/romestead/p/Romestead_Modding/BepInExPack_Romestead) by Ice Box Studio
+- [ModSettingsMenu (Settings Menu)](https://thunderstore.io/c/romestead/p/Ice_Box_Studio_Romestead/ModSettingsMenu) by Ice Box Studio
 
 They are installed automatically as dependencies by your mod manager
 
