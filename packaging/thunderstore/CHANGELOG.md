@@ -1,3 +1,10 @@
+## 1.3.1
+
+- Fixed Bucket Priority failing on Carts carrying more than the vanilla slots - the empty Bucket is now found whatever the Cart's capacity
+- Bucket Priority now takes the Bucket from the Cart being unloaded rather than the nearest Cart in range
+- When a Cart holds several empty Buckets, the one at the bottom of the stack is taken first
+- Cargo stacked high on a Cart can now be taken by hand instead of only the lower layers
+
 ## 1.3.0
 
 - Added Cart Capacity: set how many items the vanilla Carts can carry (0-64, default 4). Modded Cart types are not covered
