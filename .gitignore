@@ -431,8 +431,10 @@ FodyWeavers.xsd
 # Reference-only game/loader DLLs
 /lib/*.dll
 
-# Other
-Progress.md
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# Seriously? Visual Studio keeps adding it, I am NOT even using it
+# Visual Studio keeps adding it automatically, I am using Claude AI
 **/copilot-instructions.md

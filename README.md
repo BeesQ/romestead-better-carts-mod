@@ -1,8 +1,13 @@
+# Better Carts
+
+[![Release](https://img.shields.io/github/v/release/BeesQ/romestead-better-carts-mod?style=for-the-badge&logo=github&logoColor=white&color=blue "Latest release version.&#10;Click to view GitHub Releases.")](https://github.com/BeesQ/romestead-better-carts-mod/releases)
+[![Romestead](https://img.shields.io/badge/Romestead-0.25.1__12-blue?style=for-the-badge&logo=steam&logoColor=white "Currently supported Romestead version.&#10;Click to view Romestead on Steam.")](https://store.steampowered.com/app/1805320/Romestead)
+[![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/BeesQ/BetterCarts?style=for-the-badge&logo=thunderstore&logoColor=white&color=brightgreen "Total downloads from Thunderstore.&#10;Click to view Better Carts on Thunderstore.")](https://thunderstore.io/c/romestead/p/BeesQ/BetterCarts)
+[![License](https://img.shields.io/github/license/BeesQ/romestead-better-carts-mod?style=for-the-badge&logo=github&logoColor=white&color=orange "Project license.&#10;Click to view LICENSE.txt.")](LICENSE.txt)
+
 <p align="center">
   <img src="https://github.com/BeesQ/romestead-better-carts-mod/blob/65600df9b08e004ccec391ff0c2d4c62f6e7ac38/packaging/assets/icon.png" width="256" alt="Better Carts icon">
 </p>
-
-# Better Carts
 
 A [BepInEx 6 CoreCLR](https://www.nexusmods.com/romestead/mods/1) mod for game **[Romestead](https://store.steampowered.com/app/1805320/Romestead)** that makes hauling with Carts more pleasant with quality-of-life features, all configurable in-game
 
@@ -56,10 +61,10 @@ Recommended: grab it from a mod site, which also lists the Requirements above fo
 - **Nexus Mods**: https://www.nexusmods.com/romestead/mods/91
 - **Thunderstore**: https://thunderstore.io/c/romestead/p/BeesQ/BetterCarts (supports Install with Mod Manager)
 
-Manual (works with a build from any source, including this repo's [Releases](https://github.com/BeesQ/romestead-better-carts-mod/releases)):
+Manual, from this repo's [Releases](https://github.com/BeesQ/romestead-better-carts-mod/releases):
 
 1. Install the [Romestead BepInEx Mod Loader](https://www.nexusmods.com/romestead/mods/1) and [Mod Settings Menu](https://www.nexusmods.com/romestead/mods/8).
-2. Drop `BetterCarts.dll` and `icon.png` into `Romestead/BepInEx/plugins/BetterCarts/`.
+2. Open the zip and drop the `BetterCarts` folder, found under `BepInEx/plugins/`, into your own `Romestead/BepInEx/plugins/`.
 3. Launch the game through Steam.
 
 ## Build (developers)
@@ -79,10 +84,6 @@ Requires the .NET 8 SDK and a local Romestead install with the BepInEx 6 CoreCLR
 
 No game or loader assemblies are redistributed - they are referenced from your local install at compile time only
 
-## License
-
-Released under the [MIT License](LICENSE)
-
 ## Notes
 
 - The mod stores nothing in your save unless a Cart actually carries more than the game allows on its own - more than 4 items, or more than 5 with the Mercury blessing
@@ -95,6 +96,16 @@ Released under the [MIT License](LICENSE)
 ## Bug Reports and Feedback
 
 Please submit through GitHub Issues on this repo
+
+## AI Disclosure
+
+- Claude AI does the writing - the code and all the text that comes with it
+- I write the rules it follows: what gets built, how it works, how it reads
+- I test every build
+
+## License
+
+Released under the [MIT License](LICENSE.txt)
 
 ## Links
 
