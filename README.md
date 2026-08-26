@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/github/license/BeesQ/romestead-better-carts-mod?style=for-the-badge&logo=github&logoColor=white&color=orange "Project license.&#10;Click to view LICENSE.txt.")](LICENSE.txt)
 
 <p align="center">
-  <img src="https://github.com/BeesQ/romestead-better-carts-mod/blob/7b0ca57e06ed7be7a5a681aff7026044223f25ce/packaging/assets/banner.gif" width="100%" alt="Better Carts banner">
+  <img src="https://raw.githubusercontent.com/BeesQ/romestead-better-carts-mod/d3c54a6f7e9f84623cc718a3d469bcadc8abc91d/packaging/assets/banner.gif" width="100%" alt="Better Carts banner">
 </p>
 
 A [BepInEx 6 CoreCLR](https://www.nexusmods.com/romestead/mods/1) mod for game **[Romestead](https://store.steampowered.com/app/1805320/Romestead)** that makes hauling with Carts more pleasant with quality-of-life features, all configurable in-game
