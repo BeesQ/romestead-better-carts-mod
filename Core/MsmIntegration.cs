@@ -94,7 +94,7 @@ internal static class MsmIntegration {
         SetMember(options, "Author", "BeesQ");
         SetMember(options, "Description", "Better Carts makes hauling with Carts more pleasant with quality-of-life features, all configurable in-game");
         SetMember(options, "NexusModsId", 91);
-        SetMember(options, "UpdateManifestUrl", "https://raw.githubusercontent.com/BeesQ/romestead-better-carts-mod/main/version.json");
+        SetMember(options, "UpdateManifestUrl", "https://raw.githubusercontent.com/BeesQ/Romestead-BetterCarts-Mod/main/version.json");
         string iconPath = Path.Combine(Path.GetDirectoryName(typeof(BetterCartsPlugin).Assembly.Location) ?? string.Empty, "icon.png");
         if (File.Exists(iconPath)) {
             SetMember(options, "IconPath", iconPath);

@@ -6,6 +6,7 @@ Better Carts makes hauling with Carts more pleasant with quality-of-life feature
 [*][b]Bucket Priority[/b] - prefer grabbing an empty Bucket when unloading a Cart[/*]
 [*][b]Cart Release Fix[/b] - releasing a pulled Cart never grabs a different Cart on the same press[/*]
 [*][b]Cart Capacity[/b] - set how many items the vanilla Carts can carry (0-64, default 4). The Mercury cart-capacity blessing adds a configurable bonus on top (0-64, default 1), and Eject Overflow drops anything above the limit beside the Cart when a world loads. Modded Cart types are not covered[/*]
+[*][b]Cart Overlays[/b] - the item count is shown above a Cart carrying more than 5 items, and a Cart that comes loose from the chain by itself says so. Counts for ordinary capacity and for empty Carts can be turned on too[/*]
 [*][b]Collect Range[/b] - Carts automatically pick up loose items within a configurable range (0-10 tiles, default 2). 0 = vanilla[/*]
 [*][b]Deposit Range[/b] - Carts deposit matching cargo into Material Storages within range (0-10 tiles, default 2). 0 = vanilla[/*]
 [*][b]Connect Range[/b] - free Carts are pulled toward a Cart the player is pulling once in range (0-10 tiles, default 2). 0 = vanilla[/*]
@@ -23,7 +24,10 @@ All settings (master toggle, per-feature toggles etc.) are configured from the [
 
 [size=4][b]Multiplayer[/b][/size]
 Server-authoritative features: only the host needs the mod, joining players do not need anything installed. Bucket Priority and Cart Release Fix are client-side: they apply to each player that has the mod installed
+
 Cart Capacity is server-authoritative: the host's values apply to everyone, but each player needs the mod to SEE cargo beyond the vanilla slots
+
+Cart Overlays is client-side: the cargo count appears for each player that has the mod installed, and the disconnect message is shown to the player who was pulling the Cart
 
 [size=4][b]Compatibility[/b][/size]
 [list]
@@ -47,9 +51,16 @@ Extract the zip into your Romestead folder (the mod files land in BepInEx/plugin
 [size=4][b]Bug Reports and Feedback[/b][/size]
 Please submit through GitHub Issues on the source repo (link below)
 
+[size=4][b]AI Disclosure[/b][/size]
+[list]
+[*]Claude AI does the writing - the code and all the text that comes with it[/*]
+[*]I write the rules it follows: what gets built, how it works, how it reads[/*]
+[*]I test every build[/*]
+[/list]
+
 [size=4][b]Links[/b][/size]
 [list]
-[*]Source code (MIT): [url=https://github.com/BeesQ/romestead-better-carts-mod]GitHub[/url][/*]
+[*]Source code (MIT): [url=https://github.com/BeesQ/Romestead-BetterCarts-Mod]GitHub[/url][/*]
 [*]Also on Thunderstore: [url=https://thunderstore.io/c/romestead/p/BeesQ/BetterCarts]thunderstore.io[/url][/*]
 [*]More from me: [url=https://solo.to/BeesQ]solo.to/BeesQ[/url][/*]
 [/list]

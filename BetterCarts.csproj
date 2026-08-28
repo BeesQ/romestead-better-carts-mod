@@ -52,10 +52,6 @@
 		<HintPath>$(GamePath)\FontStashSharp.MonoGame.dll</HintPath>
 		<Private>false</Private>
 	</Reference>
-	<Reference Include="FontStashSharp.Base">
-		<HintPath>$(GamePath)\FontStashSharp.Base.dll</HintPath>
-		<Private>false</Private>
-	</Reference>
   </ItemGroup>
 
   <Target Name="CopyToGamePlugins" AfterTargets="Build" Condition="'$(CopyToGamePlugins)' == 'true'">
