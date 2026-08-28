@@ -7,7 +7,9 @@ using Candide.Entities.Controllers.Other;
 using Candide.GameModels;
 using Candide.Graphics;
 using Candide.Graphics.Fonts;
+using CandideCreator.Shared.Graphics;
 using CandideCreator.Shared.Helpers;
+using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Shared.Entity;
@@ -15,7 +17,39 @@ using Shared.Entity;
 namespace BetterCarts;
 
 internal static class CartOverlay {
-    private const float AnchorHeight = 20f;
+    // Font
+    // ArialPixel, Adventurer, Arial, Calibri, Courier
+    private static readonly StaticSpriteFont Font = PixelSpriteFont.ArialPixel;
+
+    // Size
+    // multiplies Globals.InterfaceScale, which is 2 by default. Whole numbers keep the glyph pixels even
+    private const float TextScale = 1f;
+
+    // Height
+    // world units above the cart, applied before the camera transform, so the gap scales with zoom
+    private const float AnchorHeight = 16f;
+
+    // Color
+    // any StyleHelper constant: TextNormalColor, TextYellowColor, TextGreenColor, TextWarningColor
+    private static readonly Color TextColor = StyleHelper.TextNormalColor;
+
+    // Shadow (4-sided)
+    private static readonly bool DrawShadow = true;
+    private static readonly float ShadowOffset = 1f;
+    private static readonly Color ShadowColor = Color.Black;
+
+    // Backing plate
+    // vanilla's own plate is DimGray at 0.3 alpha with 4 x 2 padding
+    private static readonly bool DrawPlate = false;
+    private const float PlatePaddingX = 4f;
+    private const float PlatePaddingY = 2f;
+    private static readonly Color PlateColor = new Color(Color.DimGray, 0.3f);
+
+    // Zoom cull
+    // vanilla hides distant entities while zoomed out; at normal zoom this costs one bool test and hides nothing
+    private static readonly bool CullWhenZoomedOut = true;
+
+    // Viewport cull
     private const float ViewportCullFactor = 0.8f;
 
     private sealed class OverlayState {
@@ -67,7 +101,9 @@ internal static class CartOverlay {
         Vector2 cameraCenter = Globals.Game.Camera.CurrentPositionCenter;
         float cull = batch.GraphicsDevice.Viewport.Width * ViewportCullFactor;
         cull *= cull;
-        float scale = Globals.InterfaceScale;
+        float scale = Globals.InterfaceScale * TextScale;
+        Vector2 scaleVector = new Vector2(scale, scale);
+        Vector2 anchorOffset = new Vector2(0f, -AnchorHeight);
 
         foreach (KeyValuePair<Cart2Controller, OverlayState> pair in States) {
             OverlayState state = pair.Value;
@@ -82,17 +118,30 @@ internal static class CartOverlay {
             if (cartEntity == null || cartEntity.Removed || !GameState.Entities.ContainsKey(cartEntity.Id)) {
                 continue;
             }
-            Vector2 anchor = cartEntity.Position.ToScreenSpace() + new Vector2(0f, -AnchorHeight);
+            Vector2 anchor = cartEntity.Position.ToScreenSpace() + anchorOffset;
             if (Vector2.DistanceSquared(anchor, cameraCenter) > cull) {
+                continue;
+            }
+            if (CullWhenZoomedOut && DeferredRenderer.IsOutsideFoW(cartEntity)) {
                 continue;
             }
             Vector2 position = Vector2.Transform(anchor, cameraMatrix);
             position.X = MathF.Round(position.X);
             position.Y = MathF.Round(position.Y);
-            PixelSpriteFont.ArialPixel.DrawHorizontallyCentered(batch, state.Text,
-                position + new Vector2(1f, 1f), scale, Color.Black);
-            PixelSpriteFont.ArialPixel.DrawHorizontallyCentered(batch, state.Text,
-                position, scale, StyleHelper.TextNormalColor);
+            if (DrawPlate) {
+                // X2 and Y2 are width and height ONLY because the measured position is Vector2.Zero - pass a real position and they become far-edge coordinates instead
+                Bounds bounds = Font.TextBounds(state.Text, Vector2.Zero, scaleVector);
+                float plateWidth = bounds.X2 + PlatePaddingX;
+                float plateHeight = bounds.Y2 + PlatePaddingY;
+                batch.DrawRect(position - new Vector2(plateWidth / 2f, 1f), plateWidth, plateHeight, PlateColor);
+            }
+            if (DrawShadow) {
+                Font.DrawHorizontallyCentered(batch, state.Text, position + new Vector2(ShadowOffset, ShadowOffset), scale, ShadowColor);
+                Font.DrawHorizontallyCentered(batch, state.Text, position + new Vector2(ShadowOffset, -ShadowOffset), scale, ShadowColor);
+                Font.DrawHorizontallyCentered(batch, state.Text, position + new Vector2(-ShadowOffset, ShadowOffset), scale, ShadowColor);
+                Font.DrawHorizontallyCentered(batch, state.Text, position + new Vector2(-ShadowOffset, -ShadowOffset), scale, ShadowColor);
+            }
+            Font.DrawHorizontallyCentered(batch, state.Text, position, scale, TextColor);
         }
     }
 
