@@ -70,7 +70,7 @@ internal static class CartCargoClient {
     }
 
     internal static void UpdateSlots(Cart2Controller cart) {
-        // OnServerSetState is a NETWORK callback - on a listen server the host never receives it, so the client half was dead in single player. Polling the parameter each tick is the only sync point that works on both
+        // SyncSlots also runs from the OnServerSetState postfix; polling here as well catches any parameter change that arrives without it, and costs one string compare when nothing moved
         SyncSlots(cart);
         List<Guid> slots = Slots.GetOrCreateValue(cart);
         if (slots.Count == 0) {
