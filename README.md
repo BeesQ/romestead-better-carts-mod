@@ -45,11 +45,20 @@ All settings (master toggle, per-feature toggles etc.) are configured from the *
 
 ## Multiplayer
 
-Server-authoritative features: only the host needs the mod, joining players do not need anything installed. Bucket Priority and Cart Release Fix are client-side: they apply to each player that has the mod installed
+**Server-side** - only the host needs the mod, joining players do not need anything installed
 
-Cart Capacity is server-authoritative: the host's values apply to everyone, but each player needs the mod to SEE cargo beyond the vanilla slots
+- Chain Overflow
+- Cart Capacity - the host's values apply to everyone, but each player needs the mod to SEE cargo beyond the vanilla slots
+- Collect Range
+- Deposit Range
+- Connect Range
+- Stockpile Range
 
-Cart Overlays is client-side: the cargo count appears for each player that has the mod installed, and the disconnect message is shown to the player who was pulling the Cart
+**Client-side** - applies to each player that has the mod installed
+
+- Bucket Priority
+- Cart Release Fix
+- Cart Overlays - the cargo count appears for every player with the mod, and the disconnect message is shown to whoever was pulling the Cart
 
 ## Compatibility
 
@@ -98,6 +107,10 @@ No game or loader assemblies are redistributed - they are referenced from your l
 ## Bug Reports and Feedback
 
 Please submit through GitHub Issues on this repo
+
+## Credits
+
+Thanks to [Beartwigs](https://beartwigs.com) for creating [Romestead](https://store.steampowered.com/app/1805320/Romestead)
 
 ## AI Disclosure
 

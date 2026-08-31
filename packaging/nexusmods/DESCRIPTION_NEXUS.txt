@@ -23,11 +23,22 @@ All settings (master toggle, per-feature toggles etc.) are configured from the [
 [/list]
 
 [size=4][b]Multiplayer[/b][/size]
-Server-authoritative features: only the host needs the mod, joining players do not need anything installed. Bucket Priority and Cart Release Fix are client-side: they apply to each player that has the mod installed
+[b]Server-side[/b] - only the host needs the mod, joining players do not need anything installed
+[list]
+[*]Chain Overflow[/*]
+[*]Cart Capacity - the host's values apply to everyone, but each player needs the mod to SEE cargo beyond the vanilla slots[/*]
+[*]Collect Range[/*]
+[*]Deposit Range[/*]
+[*]Connect Range[/*]
+[*]Stockpile Range[/*]
+[/list]
 
-Cart Capacity is server-authoritative: the host's values apply to everyone, but each player needs the mod to SEE cargo beyond the vanilla slots
-
-Cart Overlays is client-side: the cargo count appears for each player that has the mod installed, and the disconnect message is shown to the player who was pulling the Cart
+[b]Client-side[/b] - applies to each player that has the mod installed
+[list]
+[*]Bucket Priority[/*]
+[*]Cart Release Fix[/*]
+[*]Cart Overlays - the cargo count appears for every player with the mod, and the disconnect message is shown to whoever was pulling the Cart[/*]
+[/list]
 
 [size=4][b]Compatibility[/b][/size]
 [list]
@@ -50,6 +61,9 @@ Extract the zip into your Romestead folder (the mod files land in BepInEx/plugin
 
 [size=4][b]Bug Reports and Feedback[/b][/size]
 Please submit through GitHub Issues on the source repo (link below)
+
+[size=4][b]Credits[/b][/size]
+Thanks to [url=https://beartwigs.com]Beartwigs[/url] for creating [url=https://store.steampowered.com/app/1805320/Romestead]Romestead[/url]
 
 [size=4][b]AI Disclosure[/b][/size]
 [list]
