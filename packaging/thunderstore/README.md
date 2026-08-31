@@ -1,5 +1,5 @@
 [![Release](https://img.shields.io/github/v/release/BeesQ/Romestead-BetterCarts-Mod?style=for-the-badge&logo=github&logoColor=white&color=blue "Latest release version&#10;Click to view GitHub Releases")](https://github.com/BeesQ/Romestead-BetterCarts-Mod/releases)
-[![Romestead](https://img.shields.io/badge/Romestead-0.25.1__12-blue?style=for-the-badge&logo=steam&logoColor=white "Currently supported Romestead version&#10;Click to view Romestead on Steam")](https://store.steampowered.com/app/1805320/Romestead)
+[![Romestead](https://img.shields.io/badge/Romestead-0.26.1__2-blue?style=for-the-badge&logo=steam&logoColor=white "Currently supported Romestead version&#10;Click to view Romestead on Steam")](https://store.steampowered.com/app/1805320/Romestead)
 [![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/BeesQ/BetterCarts?style=for-the-badge&logo=thunderstore&logoColor=white&color=brightgreen "Total downloads from Thunderstore&#10;Click to view Better Carts on Thunderstore")](https://thunderstore.io/c/romestead/p/BeesQ/BetterCarts)
 [![License](https://img.shields.io/github/license/BeesQ/Romestead-BetterCarts-Mod?style=for-the-badge&logo=github&logoColor=white&color=orange "Project license&#10;Click to view LICENSE.txt")](https://raw.githubusercontent.com/BeesQ/Romestead-BetterCarts-Mod/939b0f4339ef7f592d6611eab6e476e13f23dcda/LICENSE.txt)
 
