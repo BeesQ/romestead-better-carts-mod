@@ -57,8 +57,8 @@ internal static class ModConfig {
                 new AcceptableValueRange<int>(0, 10),
                 EntryTag("Range", 1)));
         BucketPriorityEnabled = config.Bind("Bucket Priority", "Enabled", true,
-            new ConfigDescription("When taking an item off a Cart, prefer grabbing an empty bucket over other cargo.", null,
-                SectionTag("Bucket Priority", 2), EntryTag("Prefer empty buckets", 0)));
+            new ConfigDescription("When taking an item off a Cart, prefer grabbing an empty Bucket over other cargo.", null,
+                SectionTag("Bucket Priority", 2), EntryTag("Prefer empty Buckets", 0)));
         CartReleaseFixEnabled = config.Bind("Cart Release Fix", "Enabled", true,
             new ConfigDescription("Releasing a pulled Cart with the interact key never grabs a different Cart on the same press.", null,
                 SectionTag("Cart Release Fix", 3), EntryTag("Release without re-grabbing", 0)));
@@ -69,7 +69,7 @@ internal static class ModConfig {
             new ConfigDescription("When a world loads, a Cart carrying more than its capacity drops the surplus in a circle beside itself. Turn this off to leave that cargo on the Cart, where it stays until you unload it by hand.", null,
                 EntryTag("Eject Overflow", 1, hidden: !CartCapacityEnabled.Value)));
         CartCapacityBlessingBonus = config.Bind("Cart Capacity", "Blessing Bonus", 1,
-            new ConfigDescription("How much the Mercury Cart capacity blessing adds on top of a Cart's base capacity. The default is 1.", new AcceptableValueRange<int>(0, 64),
+            new ConfigDescription("How much the Mercury cart-capacity blessing adds on top of a Cart's base capacity. The default is 1.", new AcceptableValueRange<int>(0, 64),
                 EntryTag("Blessing Bonus", 2, hidden: !CartCapacityEnabled.Value)));
         CartCapacityLogging = config.Bind("Cart Capacity", "Logging", false,
             new ConfigDescription("DIAGNOSTIC. Writes the Cart Capacity startup and world lines to BepInEx/LogOutput.log. Off by default; turn it on in this file only when reporting a bug.", null,
@@ -91,10 +91,10 @@ internal static class ModConfig {
             new ConfigDescription("Show the cargo count on a Cart carrying 0 items.", null,
                 EntryTag("Show for empty Carts", 3, hidden: !CartOverlaysEnabled.Value)));
         CartOverlayDisconnectMessage = config.Bind("Cart Overlays", "Disconnect Message", true,
-            new ConfigDescription("Show a message above a Cart that comes loose from the chain by itself. Only the player hosting the game sees it.", null,
+            new ConfigDescription("Show a message above a Cart that comes loose from the chain by itself. Only the player who was pulling that Cart sees it.", null,
                 EntryTag("Show a message when a Cart disconnects", 4, hidden: !CartOverlaysEnabled.Value)));
         StockpileRangeEnabled = config.Bind("Stockpile Range", "Enabled", true,
-            new ConfigDescription("Carts take resources from building output stockpiles within range. Solid resources go into free slots, bucket resources fill empty buckets on the Cart.", null,
+            new ConfigDescription("Carts take resources from building output stockpiles within range. Solid resources go into free slots, bucket resources fill empty Buckets on the Cart.", null,
                 SectionTag("Stockpile Range", 9), EntryTag("Take from stockpiles", 0)));
         StockpileRange = config.Bind("Stockpile Range", "Range", 2,
             new ConfigDescription("Stockpile reach in tiles per side. 0 = vanilla (off).",

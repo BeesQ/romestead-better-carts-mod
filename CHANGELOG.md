@@ -1,3 +1,10 @@
+## 1.4.1
+
+- Fixed the Disconnect Message description
+- The Mod Settings Menu entry now links the Thunderstore page alongside the Nexus Mods page
+- Updated the Thunderstore dependency to Mod Settings Menu 1.1.2
+- Small text changes
+
 ## 1.4.0
 
 - Updated to Romestead 0.26.1

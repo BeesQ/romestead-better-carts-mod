@@ -19,7 +19,7 @@ A [BepInEx 6 CoreCLR](https://www.nexusmods.com/romestead/mods/1) mod for game *
 - **Collect Range** - Carts automatically pick up loose items within a configurable range (0-10 tiles, default 2). 0 = vanilla
 - **Deposit Range** - Carts deposit matching cargo into Material Storages within range (0-10 tiles, default 2). 0 = vanilla
 - **Connect Range** - free Carts are pulled toward a Cart the player is pulling once in range (0-10 tiles, default 2). 0 = vanilla
-- **Stockpile Range** - Carts take resources from building Output stockpiles within range, into free slots and empty Buckets on the Cart (0-10 tiles, default 2). 0 = vanilla
+- **Stockpile Range** - Carts take resources from building output stockpiles within range, into free slots and empty Buckets on the Cart (0-10 tiles, default 2). 0 = vanilla
 
 ## Configuration
 
@@ -36,7 +36,7 @@ All settings (master toggle, per-feature toggles etc.) are configured from the *
 | Collect Range    | Enabled / Range                                                       | true / 2                           | Ranged pickup of loose items (0-10 tiles, 0 = vanilla)           |
 | Deposit Range    | Enabled / Range                                                       | true / 2                           | Ranged deposit into Material Storages (0-10 tiles, 0 = vanilla)  |
 | Connect Range    | Enabled / Range                                                       | true / 2                           | Ranged Cart pulling (0-10 tiles, 0 = vanilla)                    |
-| Stockpile Range  | Enabled / Range / While pulled / While parked                         | true / 2 / true / false            | Take from Output stockpiles into Carts (0-10 tiles, 0 = vanilla) |
+| Stockpile Range  | Enabled / Range / While pulled / While parked                         | true / 2 / true / false            | Take from output stockpiles into Carts (0-10 tiles, 0 = vanilla) |
 
 ## Requirements
 
@@ -102,7 +102,7 @@ No game or loader assemblies are redistributed - they are referenced from your l
 - High capacity values can cause stutter and stack cargo into a tall tower above the Cart
 - Before removing the mod, change Carts Capacity and Mercury's blessing values back to vanilla, leave Eject Overflow on, and load each affected world once so extra cargo is released
 - Deposit Range takes only matching resources from Cart cargo
-- Stockpile Range takes only from Output stockpiles, a building's input storage is never drained
+- Stockpile Range takes only from output stockpiles, a building's input storage is never drained
 
 ## Bug Reports and Feedback
 

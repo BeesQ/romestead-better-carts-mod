@@ -10,7 +10,7 @@ Better Carts makes hauling with Carts more pleasant with quality-of-life feature
 [*][b]Collect Range[/b] - Carts automatically pick up loose items within a configurable range (0-10 tiles, default 2). 0 = vanilla[/*]
 [*][b]Deposit Range[/b] - Carts deposit matching cargo into Material Storages within range (0-10 tiles, default 2). 0 = vanilla[/*]
 [*][b]Connect Range[/b] - free Carts are pulled toward a Cart the player is pulling once in range (0-10 tiles, default 2). 0 = vanilla[/*]
-[*][b]Stockpile Range[/b] - Carts take resources from building Output stockpiles within range, into free slots and empty Buckets on the Cart (0-10 tiles, default 2). 0 = vanilla[/*]
+[*][b]Stockpile Range[/b] - Carts take resources from building output stockpiles within range, into free slots and empty Buckets on the Cart (0-10 tiles, default 2). 0 = vanilla[/*]
 [/list]
 
 [size=4][b]Configuration[/b][/size]
@@ -56,7 +56,7 @@ Extract the zip into your Romestead folder (the mod files land in BepInEx/plugin
 [*]High capacity values can cause stutter and stack cargo into a tall tower above the Cart[/*]
 [*]Before removing the mod, change Carts Capacity and Mercury's blessing values back to vanilla, leave Eject Overflow on, and load each affected world once so extra cargo is released[/*]
 [*]Deposit Range takes only matching resources from Cart cargo[/*]
-[*]Stockpile Range takes only from Output stockpiles, a building's input storage is never drained[/*]
+[*]Stockpile Range takes only from output stockpiles, a building's input storage is never drained[/*]
 [/list]
 
 [size=4][b]Bug Reports and Feedback[/b][/size]
