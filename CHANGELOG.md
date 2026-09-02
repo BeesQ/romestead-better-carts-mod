@@ -1,8 +1,8 @@
 ## 1.4.0
 
-- Updated for the latest Romestead version
+- Updated to Romestead 0.26.1
 - Added Cart Overlays: the item count is shown above a Cart carrying more than 5 items (client-side, applies per player with the mod)
-- Counts for ordinary loads and for empty Carts are available in the settings, off by default
+- Counts for ordinary capacity and for empty Carts are available in the settings, off by default
 - Added the disconnect message: a Cart that comes loose from the chain by itself now says so, shown to the player who was pulling it (client-side, applies per player with the mod)
 - Small Config text changes
 
