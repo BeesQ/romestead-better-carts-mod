@@ -1,3 +1,7 @@
+[url=https://github.com/BeesQ/Romestead-BetterCarts-Mod/releases][img]https://img.shields.io/github/v/release/BeesQ/Romestead-BetterCarts-Mod?style=for-the-badge&logo=github&logoColor=white&color=blue[/img][/url][url=https://store.steampowered.com/app/1805320/Romestead][img]https://img.shields.io/badge/Romestead-0.26.1-blue?style=for-the-badge&logo=steam&logoColor=white[/img][/url][url=https://thunderstore.io/c/romestead/p/BeesQ/BetterCarts][img]https://img.shields.io/thunderstore/dt/BeesQ/BetterCarts?style=for-the-badge&logo=thunderstore&logoColor=white&color=brightgreen[/img][/url][url=https://raw.githubusercontent.com/BeesQ/Romestead-BetterCarts-Mod/939b0f4339ef7f592d6611eab6e476e13f23dcda/LICENSE.txt][img]https://img.shields.io/github/license/BeesQ/Romestead-BetterCarts-Mod?style=for-the-badge&logo=github&logoColor=white&color=orange[/img][/url]
+
+[img]https://raw.githubusercontent.com/BeesQ/Romestead-BetterCarts-Mod/939b0f4339ef7f592d6611eab6e476e13f23dcda/packaging/assets/banner.gif[/img]
+
 Better Carts makes hauling with Carts more pleasant with quality-of-life features, all configurable in-game
 
 [size=4][b]Features[/b][/size]
@@ -44,6 +48,7 @@ All settings (master toggle, per-feature toggles etc.) are configured from the [
 [list]
 [*][url=https://www.nexusmods.com/romestead/mods/92]Iron Cart[/url] by burdock12 - compatible but not supported by the Cart Capacity feature[/*]
 [*][url=https://www.nexusmods.com/romestead/mods/34]Cart Capacity[/url] by Specsfo/Encordeo - not compatible[/*]
+[*][url=https://www.nexusmods.com/romestead/mods/62]CartEnhancements[/url] by chuxiaaaa - not compatible (it does not currently load, with or without Better Carts)[/*]
 [/list]
 
 [size=4][b]Install[/b][/size]

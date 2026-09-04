@@ -64,6 +64,7 @@ All settings (master toggle, per-feature toggles etc.) are configured from the *
 
 - [Iron Cart](https://www.nexusmods.com/romestead/mods/92) by burdock12 - compatible but not supported by the Cart Capacity feature
 - [Cart Capacity](https://www.nexusmods.com/romestead/mods/34) by Specsfo/Encordeo - not compatible
+- [CartEnhancements](https://www.nexusmods.com/romestead/mods/62) by chuxiaaaa - not compatible (it does not currently load, with or without Better Carts)
 
 ## Install
 
